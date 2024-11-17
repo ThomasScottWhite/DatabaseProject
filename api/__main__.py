@@ -1,7 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
 
-from config import CONFIG
 from fastapi import FastAPI
 from rich.logging import RichHandler
 
@@ -11,6 +10,8 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+from api.config import CONFIG
 
 
 @asynccontextmanager
@@ -23,11 +24,6 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-
-
-@app.get("/shart")
-def test():
-    return "hello, world!"
 
 
 if __name__ == "__main__":
