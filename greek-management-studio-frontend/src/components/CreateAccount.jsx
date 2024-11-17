@@ -10,7 +10,7 @@ const CreateAccount = () => {
 
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (password !== confirmPassword) {
@@ -18,11 +18,34 @@ const CreateAccount = () => {
             return;
         }
 
-        console.log(`Email: ${email}, Password: ${password}`);
+        const payload = {
+            username: email,
+            password: password,
+            organization_id: OrganizationID,
+        };
 
-        // Perform account creation logic here (API call or similar)
-        alert('Account created successfully!');
-        navigate('/'); // Redirect to home page or login after account creation
+        try {
+            const response = await fetch('http://localhost:8000/create-account', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                alert('Account created successfully!');
+                console.log('Server Response:', data);
+                navigate('/'); // Redirect to home or login page
+            } else {
+                const errorData = await response.json();
+                alert(`Error: ${errorData.detail || 'Account creation failed'}`);
+            }
+        } catch (error) {
+            console.error('Error creating account:', error);
+            alert('An error occurred while creating the account.');
+        }
     };
 
     return (

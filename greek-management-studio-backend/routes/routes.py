@@ -18,6 +18,26 @@ class LoginRequest(BaseModel):
         orm_mode = True
 
 
+class LoginResponse(BaseModel):
+    message: str
+    organization_id: str
+    account_id: str
+
+    class Config:
+        orm_mode = True
+
+
+# Route for LoginRequest
+@app.post("/login")
+async def login(request: LoginRequest):
+    # Simulated login logic
+    response = LoginResponse(
+        message="Login successful", organization_id="1", account_id="1"
+    )
+
+    return response
+
+
 class CreateAccountRequest(BaseModel):
     username: str
     password: str
@@ -25,6 +45,13 @@ class CreateAccountRequest(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+# Route for CreateAccountRequest
+@app.post("/create-account")
+async def create_account(request: CreateAccountRequest):
+
+    return {"message": "Account created successfully"}
 
 
 class CreateOrganizationRequest(BaseModel):
@@ -37,6 +64,13 @@ class CreateOrganizationRequest(BaseModel):
         orm_mode = True
 
 
+# Route for CreateOrganizationRequest
+@app.post("/create-organization")
+async def create_organization(request: CreateOrganizationRequest):
+
+    return {"message": "Organization created successfully"}
+
+
 class HomePageRequest(BaseModel):
     organization_id: str
 
@@ -44,7 +78,7 @@ class HomePageRequest(BaseModel):
         orm_mode = True
 
 
-class MemberSnippet(BaseModel):
+class MemberModel(BaseModel):
     name: str
     role: str
     email: str
@@ -55,10 +89,23 @@ class MemberSnippet(BaseModel):
 
 class HomePageResponse(BaseModel):
     organization_name: str
-    members: list[MemberSnippet]
+    members: list[MemberModel]
 
     class Config:
         orm_mode = True
+
+
+# Route for HomePageRequest
+@app.get("/homepage")
+async def homepage(request: HomePageRequest):
+
+    response = HomePageResponse(
+        organization_name="Frat Incorperated",
+        members=[
+            MemberModel(name="John Doe", role="President", email="gamer@gmail.com")
+        ],
+    )
+    return response
 
 
 class MakeBillRequest(BaseModel):
@@ -90,63 +137,13 @@ class ViewOutgoingBillRequest(BaseModel):
         orm_mode = True
 
 
-class ViewOutgoingBillRequest(BaseModel):
+class ViewMyBillsRequest(BaseModel):
     bills: list[BillModel]
     organization_id: str
     member_id: str
 
     class Config:
         orm_mode = True
-
-
-# Route for LoginRequest
-@app.post("/login")
-async def login(request: LoginRequest):
-    # Simulated login logic
-    if request.username in accounts and accounts[request.username] == request.password:
-        return {"message": "Login successful"}
-    raise HTTPException(status_code=401, detail="Invalid credentials")
-
-
-# Route for CreateAccountRequest
-@app.post("/create-account")
-async def create_account(request: CreateAccountRequest):
-    if request.username in accounts:
-        raise HTTPException(status_code=400, detail="Account already exists")
-    accounts[request.username] = request.password
-    return {"message": "Account created successfully"}
-
-
-# Route for CreateOrganizationRequest
-@app.post("/create-organization")
-async def create_organization(request: CreateOrganizationRequest):
-    if request.organization_name in organizations:
-        raise HTTPException(status_code=400, detail="Organization already exists")
-    organizations[request.organization_name] = {
-        "description": request.description,
-        "email": request.email,
-        "password": request.password,
-        "members": [],
-    }
-    return {"message": "Organization created successfully"}
-
-
-# Route for HomePageRequest
-@app.get("/homepage")
-async def homepage(request: HomePageRequest):
-    org = organizations.get(request.organization_id)
-    if not org:
-        raise HTTPException(status_code=404, detail="Organization not found")
-    response = HomePageResponse(
-        organization_name=request.organization_id,
-        members=[
-            MemberSnippet(
-                name=member["name"], role=member["role"], email=member["email"]
-            )
-            for member in org["members"]
-        ],
-    )
-    return response
 
 
 # Route for MakeBillRequest
@@ -158,14 +155,41 @@ async def make_bill(request: MakeBillRequest):
         "amount": request.amount,
         "organization_id": request.organization_id,
     }
-    bills.append(bill)
-    return {"message": "Bill created successfully", "bill": bill}
+    return {"message": "Bill created successfully"}
 
 
 # Route for ViewOutgoingBillRequest
 @app.get("/outgoing-bills")
 async def view_outgoing_bills(request: ViewOutgoingBillRequest):
-    filtered_bills = [
-        bill for bill in bills if bill["organization_id"] == request.organization_id
-    ]
-    return {"bills": filtered_bills}
+
+    response = ViewOutgoingBillRequest(
+        bills=[
+            BillModel(
+                invoicee_name="John Doe",
+                invoicee_id="1",
+                bill_name="Rent",
+                amount="1000",
+                date="2021-10-10",
+            )
+        ],
+        organization_id="1",
+    )
+    return response
+
+
+@app.get("/my-bills")
+async def view_my_bills(request: ViewMyBillsRequest):
+
+    response = ViewOutgoingBillRequest(
+        bills=[
+            BillModel(
+                invoicee_name="John Doe",
+                invoicee_id="1",
+                bill_name="Rent",
+                amount="1000",
+                date="2021-10-10",
+            )
+        ],
+        organization_id="1",
+    )
+    return response

@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Form, Button, Container, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../context/user_context';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const login_request = (e) => {
         e.preventDefault();
         console.log(`Email: ${email}, Password: ${password}`);
         // Assuming the user logs in successfully, navigate to the Members page
@@ -20,7 +21,7 @@ const Login = () => {
             <Row className="justify-content-md-center">
                 <Col xs={12} md={6}>
                     <h2 className="text-center mb-4">Login</h2>
-                    <Form onSubmit={handleSubmit}>
+                    <Form onSubmit={login_request}>
                         <Form.Group controlId="formBasicEmail" className="mb-3">
                             <Form.Label>Email address</Form.Label>
                             <Form.Control
