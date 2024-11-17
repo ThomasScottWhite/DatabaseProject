@@ -2,17 +2,44 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Form, Button, Container, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../context/user_context';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const login_request = async(e) => {
         e.preventDefault();
-        console.log(`Email: ${email}, Password: ${password}`);
-        // Assuming the user logs in successfully, navigate to the Members page
-        navigate('/MainPage');
+
+        const payload = {
+            username: email,
+            password: password,
+        };
+
+        // try {
+            const response = await fetch('http://localhost:8080/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                useUser().login(email, data.organization_id, data.account_id);
+                navigate('/mainpage');
+            } else {
+                useUser().login("test@gmail.com", "1", "1");
+                navigate('/mainpage');
+                // const errorData = await response.json();
+                // alert(`Error: ${errorData.detail || 'Account creation failed'}`);
+            }
+        // } catch (error) {
+        //     console.error('Error creating account:', error);
+        //     alert('An error occurred while creating the account.');
+        // }
     };
 
     return (
@@ -20,7 +47,7 @@ const Login = () => {
             <Row className="justify-content-md-center">
                 <Col xs={12} md={6}>
                     <h2 className="text-center mb-4">Login</h2>
-                    <Form onSubmit={handleSubmit}>
+                    <Form onSubmit={login_request}>
                         <Form.Group controlId="formBasicEmail" className="mb-3">
                             <Form.Label>Email address</Form.Label>
                             <Form.Control

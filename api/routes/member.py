@@ -3,12 +3,12 @@ from sqlalchemy.orm import Session
 from typing import List
 from db import get_db  # Absolute import instead of ..
 from models.member import Member  # Absolute import
-
-router = APIRouter()
-
 from pydantic import BaseModel
 from typing import Optional
 from datetime import date
+
+router = APIRouter(prefix="/member/")
+
 
 class MemberSchema(BaseModel):
     chapter_id: int
@@ -25,7 +25,7 @@ class MemberSchema(BaseModel):
         orm_mode = True
 
 
-@router.get("/members/{chapter_id}", response_model=List[MemberSchema])
+@router.get("{chapter_id}", response_model=List[MemberSchema])
 def get_members_by_chapter(chapter_id: int, db: Session = Depends(get_db)):
     members = db.query(Member).filter(Member.chapter_id == chapter_id).all()
     if not members:

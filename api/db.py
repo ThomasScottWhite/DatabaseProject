@@ -8,7 +8,7 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Create all tables if they don't exist
-Base.metadata.create_all(bind=engine)
+
 
 # Dependency to get a database session
 def get_db():
