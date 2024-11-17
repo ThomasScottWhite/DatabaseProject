@@ -1,7 +1,7 @@
 import React from 'react';
 import Login from './components/Login';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { UserProvider } from './context/user_context.js';
+import { UserProvider } from './context/user_context';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import MainPage from './components/MainPage';

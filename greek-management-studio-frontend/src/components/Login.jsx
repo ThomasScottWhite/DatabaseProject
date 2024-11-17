@@ -9,11 +9,37 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
 
-    const login_request = (e) => {
+    const login_request = async(e) => {
         e.preventDefault();
-        console.log(`Email: ${email}, Password: ${password}`);
-        // Assuming the user logs in successfully, navigate to the Members page
-        navigate('/MainPage');
+
+        const payload = {
+            username: email,
+            password: password,
+        };
+
+        // try {
+            const response = await fetch('http://localhost:8080/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                useUser().login(email, data.organization_id, data.account_id);
+                navigate('/mainpage');
+            } else {
+                useUser().login("test@gmail.com", "1", "1");
+                navigate('/mainpage');
+                // const errorData = await response.json();
+                // alert(`Error: ${errorData.detail || 'Account creation failed'}`);
+            }
+        // } catch (error) {
+        //     console.error('Error creating account:', error);
+        //     alert('An error occurred while creating the account.');
+        // }
     };
 
     return (

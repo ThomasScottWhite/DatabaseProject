@@ -1,13 +1,32 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List
+import uvicorn
+from fastapi.middleware.cors import CORSMiddleware
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# Sample data stores
-organizations = {}
-accounts = {}
-bills = []
+# Define allowed origins
+origins = [
+    "http://localhost:3000",  # Your frontend URL
+]
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # List of allowed origins
+    allow_credentials=True,  # Allow cookies and credentials
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+)
+
+
+@app.post("/login")
+async def login():
+    return {"message": "Login successful"}
 
 
 class LoginRequest(BaseModel):
@@ -193,3 +212,7 @@ async def view_my_bills(request: ViewMyBillsRequest):
         organization_id="1",
     )
     return response
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8080)
