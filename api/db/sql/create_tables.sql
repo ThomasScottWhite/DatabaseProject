@@ -4,25 +4,25 @@
 -- Tested in PostgreSQL
 
 CREATE TABLE Organization (
-    Name            varchar(max),
-    Greek_Letters   varchar(max)    NOT NULL,
-    Type            varchar(max)    NOT NULL,
+    Name            text,
+    Greek_Letters   text    NOT NULL,
+    Type            text    NOT NULL,
 
     Primary Key (Name)
 );
 
 CREATE TABLE School (
-    Name                varchar(max),
-    Billing_Address     varchar(max)    NOT NULL,
+    Name                text,
+    Billing_Address     text    NOT NULL,
 
     Primary Key (Name)
 );
 
 CREATE TABLE Chapter (
-    Name                varchar(max)    NOT NULL,
-    Billing_Address     varchar(max)    NOT NULL,
-    Org_name            varchar(max),
-    School_Name         varchar(max),
+    Name                text    NOT NULL,
+    Billing_Address     text    NOT NULL,
+    Org_name            text,
+    School_Name         text,
     ID                  int,
 
     FOREIGN KEY (Org_name) REFERENCES Organization (Name),
@@ -32,22 +32,22 @@ CREATE TABLE Chapter (
 
 CREATE TABLE Member (
     Chapter_ID          int,
-    Email               varchar(max),
-    Fname               varchar(max)    NOT NULL,
-    Lname               varchar(max)    NOT NULL,
+    Email               text,
+    Fname               text    NOT NULL,
+    Lname               text    NOT NULL,
     DOB                 date            NOT NULL,
     Member_ID           int             NOT NULL,
-    Member_Status       varchar(max)    NOT NULL,
+    Member_Status       text    NOT NULL,
     Is_Chapter_Admin    bool            NOT NULL,
-    Phone_Num           varchar(max)    NOT NULL,
+    Phone_Num           text    NOT NULL,
 
     Primary Key (Email),
     Foreign Key (Chapter_ID) References Chapter (ID)
 );
 
-CREATE TABLE User (
-    Email       varchar(max),
-    Password    varchar(max)    NOT NULL,
+CREATE TABLE "user" (
+    Email       text,
+    Password    text    NOT NULL,
     Is_Admin    bool            NOT NULL,
 
     FOREIGN KEY (Email) REFERENCES Member (Email)
@@ -58,8 +58,8 @@ CREATE TABLE Bill (
     Bill_ID         UUID,
     Amount          float           NOT NULL,
     Amount_Paid     float           NOT NULL,
-    Desc            varchar(max)    NOT NULL,
-    Due_Date        datetime        NOT NULL,
+    "desc"            text    NOT NULL,
+    Due_Date       	timestamp        NOT NULL,
     Issue_Date      date            NOT NULL,
     Is_External     bool            NOT NULL,
 
@@ -69,27 +69,27 @@ CREATE TABLE Bill (
 
 CREATE TABLE External_Bill (
     Bill_ID             UUID,
-    Chapter_Contact     varchar(max)    NOT NULL,
-    Payor_Name          varchar(max)    NOT NULL,
-    P_Billing_Address   varchar(max)    NOT NULL,
-    P_Email             varchar(max)    NOT NULL,
-    P_Phone_Num         varchar(max)    NOT NULL,
+    Chapter_Contact     text    NOT NULL,
+    Payor_Name          text    NOT NULL,
+    P_Billing_Address   text    NOT NULL,
+    P_Email             text    NOT NULL,
+    P_Phone_Num         text    NOT NULL,
 
     FOREIGN KEY (Bill_ID) REFERENCES Bill (Bill_ID)
 );
 
 CREATE TABLE Internal_Bill (
     Bill_ID         UUID,
-    Member_Email    varchar(max),
+    Member_Email    text,
 
     FOREIGN KEY (Bill_ID) REFERENCES Bill (Bill_ID),
     FOREIGN KEY (Member_Email) REFERENCES Member (Email)
 );
 
 CREATE TABLE Payment_Info (
-    Member_Email    varchar(max),
+    Member_Email    text,
     Payment_ID      int,
-    Nickname        varchar(max)    NOT NULL,
+    Nickname        text    NOT NULL,
 
     FOREIGN KEY (Member_Email) REFERENCES Member (Email),
     PRIMARY KEY (Payment_ID)
@@ -100,7 +100,7 @@ CREATE TABLE Bank_Account (
     Account_Num     int,
     Routing_Num     int,
 
-    FOREIGN KEY (Payment_ID) REFERENCES Bill (Payment_ID),
+    FOREIGN KEY (Payment_ID) REFERENCES Payment_Info (Payment_ID),
     PRIMARY KEY (Account_Num, Routing_Num)
 );
 
@@ -111,6 +111,6 @@ CREATE TABLE Card (
     Exp_Date        varchar     NOT NULL,
     Name            varchar     NOT NULL,
 
-    FOREIGN KEY (Payment_ID) REFERENCES Bill (Payment_ID),
+    FOREIGN KEY (Payment_ID) REFERENCES Payment_Info (Payment_ID),
     PRIMARY KEY (Card_Num)
 );
