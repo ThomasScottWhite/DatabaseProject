@@ -1,13 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, Container, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
 const ViewBills = () => {
     const [bills, setBills] = useState([
-        { id: 1, name: 'Chapter Rent', amount: 1000, dueDate: '2024-10-30', source: "Example", paid: false },
-        { id: 2, name: 'Greek Markup', amount: 500, dueDate: '2024-11-05', source: "Example", paid: false },
-        { id: 3, name: 'Parking (we are evil)', amount: 30, dueDate: '2024-10-28', source: "Example", paid: false },
-    ]);
+        { invoicee_id: 1, bill_name: 'Chapter Rent', amount: 1000, date: '2024-10-30', invoicee_name: "Joe", paid: "Unpaid" },
+        { invoicee_id: 2, bill_name: 'Greek Markup', amount: 500, date: '2024-11-05', invoicee_name: "Joe", paid: "Unpaid"},
+        { invoicee_id: 3, bill_name: 'Parking (we are evil)', amount: 30, date: '2024-10-28', invoicee_name: "Joe" , paid: "Unpaid"},
+    ]);    
+    const payload = { someKey: 'someValue' };
+
+    const Refresh = async () => {
+        try {
+            const response = await fetch('/api/my-bills', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            setBills(data.bills);
+
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
+
+    useEffect(() => {
+        Refresh();
+    }, []);
 
     const navigate = useNavigate();
 
@@ -32,12 +58,12 @@ const ViewBills = () => {
                 </thead>
                 <tbody>
                     {bills.map((bill) => (
-                        <tr key={bill.id}>
-                            <td>{bill.id}</td>
-                            <td>{bill.name}</td>
+                        <tr key={bill.invoicee_id}>
+                            <td>{bill.invoicee_id}</td>
+                            <td>{bill.bill_name}</td>
                             <td>{bill.amount}</td>
-                            <td>{bill.dueDate}</td>
-                            <td>{bill.source}</td>
+                            <td>{bill.date}</td>
+                            <td>{bill.invoicee_name}</td>
                             <td>{bill.paid ? 'Paid' : 'Unpaid'}</td>
                             <td>
                                 {!bill.paid ? (

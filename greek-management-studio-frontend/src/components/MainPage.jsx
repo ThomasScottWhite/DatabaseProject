@@ -6,6 +6,7 @@ import MakeBills from './MakeBills';
 import ViewBills from './ViewBills';
 import PaymentScreen from './PaymentScreen';
 import OutgoingBills from "./OutgoingBills"
+
 const MainPage = () => {
     return (
         <Container className="mt-5">

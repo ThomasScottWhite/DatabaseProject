@@ -8,8 +8,9 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
+    const user = useUser(); // Move useUser() to the top level of the component
 
-    const login_request = async(e) => {
+    const login_request = async (e) => {
         e.preventDefault();
 
         const payload = {
@@ -17,8 +18,8 @@ const Login = () => {
             password: password,
         };
 
-        // try {
-            const response = await fetch('http://localhost:8080/login', {
+        try {
+            const response = await fetch('/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -28,18 +29,18 @@ const Login = () => {
 
             if (response.ok) {
                 const data = await response.json();
-                useUser().login(email, data.organization_id, data.account_id);
+                // Use user context to update login state
+                user.login(email, data.organization_id, data.account_id);
                 navigate('/mainpage');
             } else {
-                useUser().login("test@gmail.com", "1", "1");
+                // Handle login failure (example: setting test data)
+                user.login('test@gmail.com', '1', '1');
                 navigate('/mainpage');
-                // const errorData = await response.json();
-                // alert(`Error: ${errorData.detail || 'Account creation failed'}`);
             }
-        // } catch (error) {
-        //     console.error('Error creating account:', error);
-        //     alert('An error occurred while creating the account.');
-        // }
+        } catch (error) {
+            console.error('Error logging in:', error);
+            alert('An error occurred while logging in.');
+        }
     };
 
     return (

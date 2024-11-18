@@ -1,31 +1,32 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
-const UserContext = createContext();
+// Create the context
+const UserContext = createContext(null);
 
-export const useUser = () => {
-    return useContext(UserContext);
-};
-
+// Create the provider
 export const UserProvider = ({ children }) => {
-    const [user, setUser] = useState(null); // User details
-    const [organizationId, setOrganizationId] = useState(null); // Organization ID
-    const [accountId, setAccountId] = useState(null); // Account ID
+    const [user, setUser] = useState(null);
 
-    const login = (userData, orgId, accId) => {
-        setUser(userData); // Set the logged-in user
-        setOrganizationId(orgId); // Set the organization ID
-        setAccountId(accId); // Set the account ID
+    const login = (email, organizationId, accountId) => {
+        setUser({ email, organizationId, accountId });
     };
 
     const logout = () => {
         setUser(null);
-        setOrganizationId(null);
-        setAccountId(null);
     };
 
     return (
-        <UserContext.Provider value={{ user, organizationId, accountId, login, logout }}>
+        <UserContext.Provider value={{ user, login, logout }}>
             {children}
         </UserContext.Provider>
     );
+};
+
+// Custom hook to use the UserContext
+export const useUser = () => {
+    const context = useContext(UserContext);
+    if (!context) {
+        throw new Error('useUser must be used within a UserProvider');
+    }
+    return context;
 };
