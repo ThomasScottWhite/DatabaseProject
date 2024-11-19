@@ -8,7 +8,7 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
-    const user = useUser(); // Move useUser() to the top level of the component
+    const user = useUser();
 
     const login_request = async (e) => {
         e.preventDefault();
@@ -30,7 +30,7 @@ const Login = () => {
             if (response.ok) {
                 const data = await response.json();
                 // Use user context to update login state
-                user.login(email, data.organization_id, data.account_id);
+                user.login(email, data.organization_id, data.account_id, data.auth_token);
                 navigate('/mainpage');
             } else {
                 // Handle login failure (example: setting test data)

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col } from 'react-bootstrap';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useUser } from '../context/user_context';
 
 const PaymentScreen = () => {
     const [cardNumber, setCardNumber] = useState('');

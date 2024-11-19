@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Container, Row, Col, Button } from 'react-bootstrap';
+import { useUser } from '../context/user_context';
 
 const Members = () => {
+    const user = useUser();
     const [members, setMembers] = useState([
         { id: 1, name: 'John Doe', role: 'President', email: 'john@example.com' },
         { id: 2, name: 'Joe Smith', role: 'Vice President', email: 'joe@example.com' },
@@ -17,6 +19,7 @@ const Members = () => {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': user.authToken,
                 },
             });
             

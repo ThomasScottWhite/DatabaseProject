@@ -1,14 +1,40 @@
 import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col } from 'react-bootstrap';
+import { useUser } from '../context/user_context';
 
 const MakeBills = () => {
     const [billName, setBillName] = useState('');
     const [amount, setAmount] = useState('');
+    const [invoicee, setInvoicee] = useState('');
+    const user = useUser();
 
-    const handleSubmit = (e) => {
+    const make_bill_request = async (e) => {
         e.preventDefault();
-        console.log(`Bill Name: ${billName}, Amount: ${amount}`);
-        // Handle bill creation logic here
+
+        const payload = {
+            bill_name: billName,
+            invoicee_id: invoicee,
+            amount: amount,
+        };
+
+        try {
+            const response = await fetch('/api/make-bill', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': user.auth_token,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (response.ok) {
+                alert("Bill Made")
+            }
+
+        } catch (error) {
+            console.error('Error logging in:', error);
+            alert('An error occurred while logging in.');
+        }
     };
 
     return (
@@ -16,7 +42,7 @@ const MakeBills = () => {
             <Row className="justify-content-md-center">
                 <Col xs={12} md={6}>
                     <h2 className="text-center">Create a Bill</h2>
-                    <Form onSubmit={handleSubmit}>
+                    <Form onSubmit={make_bill_request}>
                         <Form.Group controlId="formBillName" className="mb-3">
                             <Form.Label>Bill Name</Form.Label>
                             <Form.Control
@@ -32,8 +58,8 @@ const MakeBills = () => {
                             <Form.Control
                                 type="text"
                                 placeholder="Enter account id"
-                                value={billName}
-                                onChange={(e) => setBillName(e.target.value)}
+                                value={invoicee}
+                                onChange={(e) => setInvoicee(e.target.value)}
                                 required
                             />
                         </Form.Group>

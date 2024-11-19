@@ -1,7 +1,7 @@
 from typing import List
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -34,6 +34,7 @@ class LoginResponse(BaseModel):
     message: str
     organization_id: str
     account_id: str
+    auth_token: str
 
     class Config:
         orm_mode = True
@@ -42,9 +43,12 @@ class LoginResponse(BaseModel):
 # Route for LoginRequest
 @app.post("/login")
 async def login(request: LoginRequest):
-    # Simulated login logic
+
     response = LoginResponse(
-        message="Login successful", organization_id="1", account_id="1"
+        message="Login successful",
+        organization_id="1",
+        account_id="1",
+        auth_token="1234",
     )
 
     return response
@@ -61,7 +65,10 @@ class CreateAccountRequest(BaseModel):
 
 # Route for CreateAccountRequest
 @app.post("/create-account")
-async def create_account(request: CreateAccountRequest):
+async def create_account(request: CreateAccountRequest, raw_request: Request):
+    auth_token = raw_request.headers.get("Authorization")
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Authorization token missing")
 
     return {"message": "Account created successfully"}
 
@@ -78,7 +85,10 @@ class CreateOrganizationRequest(BaseModel):
 
 # Route for CreateOrganizationRequest
 @app.post("/create-organization")
-async def create_organization(request: CreateOrganizationRequest):
+async def create_organization(request: CreateOrganizationRequest, raw_request: Request):
+    auth_token = raw_request.headers.get("Authorization")
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Authorization token missing")
 
     return {"message": "Organization created successfully"}
 
@@ -108,9 +118,11 @@ class HomePageResponse(BaseModel):
         orm_mode = True
 
 
-# Route for HomePageRequest
 @app.get("/homepage")
-async def homepage():  # request: HomePageRequest
+async def homepage(request: Request):  # request: HomePageRequest
+    auth_token = request.headers.get("Authorization")
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Authorization token missing")
 
     response = HomePageResponse(
         organization_name="Frat Incorperated",
@@ -127,7 +139,6 @@ class MakeBillRequest(BaseModel):
     bill_name: str
     invoicee_id: str
     amount: float
-    organization_id: str
 
     class Config:
         orm_mode = True
@@ -135,12 +146,15 @@ class MakeBillRequest(BaseModel):
 
 # Route for MakeBillRequest
 @app.post("/make-bill")
-async def make_bill(request: MakeBillRequest):
+async def make_bill(request: MakeBillRequest, raw_request: Request):
+    auth_token = raw_request.headers.get("Authorization")
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Authorization token missing")
+
     bill = {
         "bill_name": request.bill_name,
         "invoicee_id": request.invoicee_id,
         "amount": request.amount,
-        "organization_id": request.organization_id,
     }
     return {"message": "Bill created successfully"}
 
@@ -167,7 +181,10 @@ class ViewOutgoingBillRequest(BaseModel):
 
 # Route for ViewOutgoingBillRequest
 @app.get("/outgoing-bills")
-async def view_outgoing_bills():  # request: ViewOutgoingBillRequest
+async def view_outgoing_bills(request: Request):  # request: ViewOutgoingBillRequest
+    auth_token = request.headers.get("Authorization")
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Authorization token missing")
 
     response = ViewOutgoingBillRequest(
         bills=[
@@ -193,7 +210,10 @@ class ViewMyBillsRequest(BaseModel):
 
 
 @app.get("/my-bills")
-async def view_my_bills():  # request: ViewMyBillsRequest
+async def view_my_bills(request: Request):
+    auth_token = request.headers.get("Authorization")
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Authorization token missing")
 
     response = ViewMyBillsRequest(
         bills=[

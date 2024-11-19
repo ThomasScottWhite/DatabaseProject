@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Container, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../context/user_context';
 
 const ViewBills = () => {
     const [bills, setBills] = useState([
@@ -9,13 +10,14 @@ const ViewBills = () => {
         { invoicee_id: 3, bill_name: 'Parking (we are evil)', amount: 30, date: '2024-10-28', invoicee_name: "Joe" , paid: "Unpaid"},
     ]);    
     const payload = { someKey: 'someValue' };
-
+    const user = useUser();
     const Refresh = async () => {
         try {
             const response = await fetch('/api/my-bills', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': user.authToken,
                 },
             });
             
