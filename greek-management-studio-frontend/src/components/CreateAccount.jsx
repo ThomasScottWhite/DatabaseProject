@@ -6,7 +6,7 @@ const CreateAccount = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [OrganizationID, SetOrganizationID] = useState('');
+    const [organizationID, setOrganizationID] = useState('');
 
     const navigate = useNavigate();
 
@@ -21,7 +21,7 @@ const CreateAccount = () => {
         const payload = {
             username: email,
             password: password,
-            organization_id: OrganizationID,
+            organization_id: organizationID,
         };
 
         try {
@@ -91,8 +91,8 @@ const CreateAccount = () => {
                             <Form.Control
                                 type="organizationid"
                                 placeholder="Organization ID"
-                                value={confirmPassword}
-                                onChange={(e) => SetOrganizationID(e.target.value)}
+                                value={organizationID}
+                                onChange={(e) => setOrganizationID(e.target.value)}
                                 required
                             />
                         </Form.Group>
