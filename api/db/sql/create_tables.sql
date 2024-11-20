@@ -26,7 +26,7 @@ CREATE TABLE Chapter (
     Billing_Address     text    NOT NULL,
     Org_name            text,
     School_Name         text,
-    ID                  int,
+    ID                  bigserial,
 
     FOREIGN KEY (Org_name) REFERENCES Organization (Name),
     FOREIGN KEY (School_Name) REFERENCES School (Name),
