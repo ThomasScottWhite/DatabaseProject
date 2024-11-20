@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Container } from 'react-bootstrap';
+import { useUser } from '../context/user_context';
 
 const ViewBills = () => {
     // Dummy data for bills
@@ -8,14 +9,15 @@ const ViewBills = () => {
         { invoicee_id: 2, bill_name: 'Greek Markup', amount: 500, date: '2024-11-05', invoicee_name: "Joe" },
         { invoicee_id: 3, bill_name: 'Parking (we are evil)', amount: 30, date: '2024-10-28', invoicee_name: "Joe" },
     ]);    
-    const payload = { someKey: 'someValue' };
-
+    const user = useUser();
+    
     const Refresh = async () => {
         try {
             const response = await fetch('/api/outgoing-bills', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': user.authToken,
                 },
             });
             

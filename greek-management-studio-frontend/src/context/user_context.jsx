@@ -7,8 +7,18 @@ const UserContext = createContext(null);
 export const UserProvider = ({ children }) => {
     const [user, setUser] = useState(null);
 
-    const login = (email, organizationId, accountId) => {
-        setUser({ email, organizationId, accountId });
+    const login = (email, organizationId, accountId, authToken) => {
+        setUser({ email, organizationId, accountId, authToken });
+    };
+
+    const get_auth_token = async () => {
+        if (user === null) {
+            return null;
+        }
+        else{
+            return user.authToken; 
+        }
+        
     };
 
     const logout = () => {
