@@ -3,6 +3,7 @@
 -- For Database Project
 -- Tested in PostgreSQL
 
+-- Create Organization table
 CREATE TABLE Organization (
     Name            text,
     Greek_Letters   text    NOT NULL,
@@ -11,6 +12,7 @@ CREATE TABLE Organization (
     Primary Key (Name)
 );
 
+-- Create School table
 CREATE TABLE School (
     Name                text,
     Billing_Address     text    NOT NULL,
@@ -18,6 +20,7 @@ CREATE TABLE School (
     Primary Key (Name)
 );
 
+-- Create Chapter table
 CREATE TABLE Chapter (
     Name                text    NOT NULL,
     Billing_Address     text    NOT NULL,
@@ -30,36 +33,39 @@ CREATE TABLE Chapter (
     PRIMARY KEY (ID)
 );
 
+-- Create Member table
 CREATE TABLE Member (
     Chapter_ID          int,
     Email               text,
     Fname               text    NOT NULL,
     Lname               text    NOT NULL,
-    DOB                 date            NOT NULL,
-    Member_ID           int             NOT NULL,
+    DOB                 date    NOT NULL,
+    Member_ID           int     NOT NULL,
     Member_Status       text    NOT NULL,
-    Is_Chapter_Admin    bool            NOT NULL,
+    Is_Chapter_Admin    bool    NOT NULL,
     Phone_Num           text    NOT NULL,
 
     Primary Key (Email),
     Foreign Key (Chapter_ID) References Chapter (ID)
 );
 
+-- Create User table
 CREATE TABLE "user" (
     Email       text,
     Password    text    NOT NULL,
-    Is_Admin    bool            NOT NULL,
+    Is_Admin    bool    NOT NULL,
 
     FOREIGN KEY (Email) REFERENCES Member (Email)
 );
 
+-- Create Bill table
 CREATE TABLE Bill (
     Chapter_ID      int,
     Bill_ID         UUID,
     Amount          float           NOT NULL,
     Amount_Paid     float           NOT NULL,
-    "desc"            text    NOT NULL,
-    Due_Date       	timestamp        NOT NULL,
+    "desc"          text            NOT NULL,
+    Due_Date       	timestamp       NOT NULL,
     Issue_Date      date            NOT NULL,
     Is_External     bool            NOT NULL,
 
@@ -67,6 +73,7 @@ CREATE TABLE Bill (
     PRIMARY KEY (Bill_ID)
 );
 
+-- Create External_Bill table
 CREATE TABLE External_Bill (
     Bill_ID             UUID,
     Chapter_Contact     text    NOT NULL,
@@ -78,6 +85,7 @@ CREATE TABLE External_Bill (
     FOREIGN KEY (Bill_ID) REFERENCES Bill (Bill_ID)
 );
 
+-- Create Internal_Bill table
 CREATE TABLE Internal_Bill (
     Bill_ID         UUID,
     Member_Email    text,
@@ -86,6 +94,7 @@ CREATE TABLE Internal_Bill (
     FOREIGN KEY (Member_Email) REFERENCES Member (Email)
 );
 
+-- Create Payment_Info table
 CREATE TABLE Payment_Info (
     Member_Email    text,
     Payment_ID      int,
@@ -95,6 +104,7 @@ CREATE TABLE Payment_Info (
     PRIMARY KEY (Payment_ID)
 );
 
+-- Create BankAccount table
 CREATE TABLE Bank_Account (
     Payment_ID      int,
     Account_Num     int,
@@ -104,6 +114,7 @@ CREATE TABLE Bank_Account (
     PRIMARY KEY (Account_Num, Routing_Num)
 );
 
+-- Create Card table
 CREATE TABLE Card (
     Payment_ID      int,
     Card_Num        int,
