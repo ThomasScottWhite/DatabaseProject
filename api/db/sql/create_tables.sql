@@ -24,11 +24,11 @@ CREATE TABLE School (
 CREATE TABLE Chapter (
     Name                text    NOT NULL,
     Billing_Address     text    NOT NULL,
-    Org_name            text,
+    Org_Name            text,
     School_Name         text,
-    ID                  bigserial,
+    ID                  serial,
 
-    FOREIGN KEY (Org_name) REFERENCES Organization (Name),
+    FOREIGN KEY (Org_Name) REFERENCES Organization (Name),
     FOREIGN KEY (School_Name) REFERENCES School (Name),
     PRIMARY KEY (ID)
 );
@@ -44,12 +44,12 @@ CREATE TABLE "user" (
 
 -- Create Member table
 CREATE TABLE Member (
-    Chapter_ID          int,
+    Chapter_ID          bigint,
     Email               text    UNIQUE,
     Fname               text    NOT NULL,
     Lname               text    NOT NULL,
     DOB                 date    NOT NULL,
-    Member_ID           int     NOT NULL,
+    Member_ID           serial  UNIQUE,
     Member_Status       text    NOT NULL,
     Is_Chapter_Admin    bool    NOT NULL,
     Phone_Num           text    NOT NULL,
