@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings
 
 class _Config(BaseSettings):
     database_url: str = (
-        "postgresql://admin:admin@localhost:5435/greek_management_studio"
+        "postgresql://admin:admin@localhost:5432/greek_management_studio"
     )
     port: int = 6969
 
