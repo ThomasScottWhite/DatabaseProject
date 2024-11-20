@@ -5,6 +5,7 @@ import uuid
 from typing import Any
 
 from fastapi import HTTPException, status
+from sqlalchemy import select
 
 from api import db, utils
 
@@ -183,13 +184,29 @@ def authenticate(
     # TODO: complete this implementation!
 
     with db.get_connection() as conn:
-        users = db.users.c
+        user = db.tb.user.c
         result = conn.execute(
-            users.select([users.is_admin, db.tb.member.c.chapter_id])
-            .join(db.tb.member, right_outer_join=True)
-            .where(users.email == email, users.password == password)
+            select(
+                user.is_admin,
+                db.tb.member.c.chapter_id,
+                db.tb.member.c.is_chapter_admin,
+            )
+            .select_from(db.tb.user)
+            .join(db.tb.member, isouter=True)
+            .where(user.email == email, user.password == password)
         ).one_or_none()
-        print(result)
+
+        if result is not None:
+            token = str(uuid.uuid4())
+            Auth(
+                token,
+                email,
+                result[0],
+                result[1],
+                result[2] or False,
+                expires_in=expires_in,
+            ).register_self()
+            return token
 
 
 @utils.export
