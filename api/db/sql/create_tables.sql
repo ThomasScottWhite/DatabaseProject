@@ -33,10 +33,19 @@ CREATE TABLE Chapter (
     PRIMARY KEY (ID)
 );
 
+-- Create User table
+CREATE TABLE "user" (
+    Email       text,
+    Password    text    NOT NULL,
+    Is_Admin    bool    NOT NULL,
+
+    PRIMARY KEY (Email)
+);
+
 -- Create Member table
 CREATE TABLE Member (
     Chapter_ID          int,
-    Email               text,
+    Email               text    UNIQUE,
     Fname               text    NOT NULL,
     Lname               text    NOT NULL,
     DOB                 date    NOT NULL,
@@ -45,17 +54,8 @@ CREATE TABLE Member (
     Is_Chapter_Admin    bool    NOT NULL,
     Phone_Num           text    NOT NULL,
 
-    Primary Key (Email),
+    Foreign Key (Email) References "user" (Email),
     Foreign Key (Chapter_ID) References Chapter (ID)
-);
-
--- Create User table
-CREATE TABLE "user" (
-    Email       text,
-    Password    text    NOT NULL,
-    Is_Admin    bool    NOT NULL,
-
-    FOREIGN KEY (Email) REFERENCES Member (Email)
 );
 
 -- Create Bill table
