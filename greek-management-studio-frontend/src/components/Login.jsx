@@ -30,7 +30,7 @@ const Login = () => {
             if (response.ok) {
                 const data = await response.json();
                 // Use user context to update login state
-                user.login(email, data.organization_id, data.account_id, data.auth_token);
+                user.login(email, data.organization_id, data.auth_token);
                 navigate('/mainpage');
             } else {
                 // Handle login failure (example: setting test data)

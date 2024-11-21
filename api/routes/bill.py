@@ -26,7 +26,19 @@ async def make_bill(info: MakeBillRequest, raw_request: Request):
 
     auth.get(auth_token).is_chapter_admin(info.chapter_id).raise_for_http()
 
-    query = f"SELECT * FROM bills WHERE bill_name = '{info.bill_name}'"
+    with db.get_connection() as conn:
+
+        query = db.tb.bill.insert().values(chapter_id=info.chapter_id, amount=info.amount, amount_paid=0, desc=info.bill_name, is_external=0)
+
+        (tempBillID,) = conn.execute(query).one()
+
+        #if (info.is_external == FALSE):
+        #   query = db.tb.internal_bill.insert().values(bill_id=tempBillID[0], member_email=info.invoicee_id)
+        #
+        #else:
+        #   query = db.tb.external_bill.insert().values(bill_id=tempBillID[0], chapter_contact=FIXME, payor_name=FIXME, p_billing_address=FIXME, p_mail=FIXME, p_phone_num=FIXME)
+        #
+        #conn.execute(query).one()
 
     # make the bill
 
