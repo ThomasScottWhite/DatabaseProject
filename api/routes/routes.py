@@ -48,7 +48,7 @@ async def login(request: LoginRequest):
     response = LoginResponse(
         message="Login successful",
         organization_id="1",
-        email="gamer@gmail.com"
+        email="gamer@gmail.com",
         auth_token="1234",
         is_admin=True,
     )
@@ -140,6 +140,7 @@ async def homepage(request: Request):  # request: HomePageRequest
 class MakeBillRequest(BaseModel):
     bill_name: str
     invoicee_id: str
+    due_date: str
     amount: float
 
     class Config:
@@ -157,6 +158,35 @@ async def make_bill(request: MakeBillRequest, raw_request: Request):
         "bill_name": request.bill_name,
         "invoicee_id": request.invoicee_id,
         "amount": request.amount,
+        "due_date": request.due_date,
+    }
+    return {"message": "Bill created successfully"}
+
+
+class MakeExternalBillRequest(BaseModel):
+    bill_name: str
+    chapter_contact: str
+    payer_name: str
+    payer_bill_address: str
+    payer_email: str
+    payer_phone: str
+    due_date: str
+    amount: float
+
+    class Config:
+        orm_mode = True
+
+
+@app.post("/make-external-bill")
+async def make_bill(request: MakeExternalBillRequest, raw_request: Request):
+    auth_token = raw_request.headers.get("Authorization")
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Authorization token missing")
+
+    bill = {
+        "bill_name": request.bill_name,
+        "invoicee_id": request.invoicee_id,
+        "amount": request.amount,
     }
     return {"message": "Bill created successfully"}
 
@@ -164,10 +194,11 @@ async def make_bill(request: MakeBillRequest, raw_request: Request):
 class BillModel(BaseModel):
     invoicee_name: str
     invoicee_id: str
+    bill_id: int
     bill_name: str
     amount: str
     date: str
-    paid: str
+    paid: bool
 
     class Config:
         orm_mode = True
@@ -193,10 +224,11 @@ async def view_outgoing_bills(request: Request):  # request: ViewOutgoingBillReq
             BillModel(
                 invoicee_name="John Doe",
                 invoicee_id="1",
+                bill_id=1,
                 bill_name="Rent",
                 amount="1000",
                 date="2021-10-10",
-                paid="Unpaid",
+                paid=False,
             )
         ],
         organization_id="1",
@@ -222,14 +254,34 @@ async def view_my_bills(request: Request):
             BillModel(
                 invoicee_name="John Doe",
                 invoicee_id="1",
+                bill_id=1,
                 bill_name="Rent",
                 amount="1000",
                 date="2021-10-10",
-                paid="Unpaid",
+                paid=False,
             )
         ],
         organization_id="1",
     )
+    return response
+
+
+class paymentRequest(BaseModel):
+    bill_id: int
+    amount: float
+    card_number: str
+    ccv: str
+
+    class Config:
+        orm_mode = True
+
+
+@app.post("/payment")
+async def login(request: paymentRequest):
+
+    response = {
+        "message": "Payment successful",
+    }
     return response
 
 
