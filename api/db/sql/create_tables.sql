@@ -7,7 +7,7 @@
 CREATE TABLE Organization (
     Name            text,
     Greek_Letters   text    NOT NULL,
-    Type            text    NOT NULL,
+    Type            text    NOT NULL, --FIXME ADD CONSTRAINT
 
     Primary Key (Name)
 );
@@ -50,7 +50,7 @@ CREATE TABLE Member (
     Lname               text    NOT NULL,
     DOB                 date    NOT NULL,
     Member_ID           serial  UNIQUE,
-    Member_Status       text    NOT NULL,
+    Member_Status       text    NOT NULL, --FIXME ADD CONTRAINT
     Is_Chapter_Admin    bool    NOT NULL,
     Phone_Num           text    NOT NULL,
 
@@ -60,7 +60,7 @@ CREATE TABLE Member (
 
 -- Create Bill table
 CREATE TABLE Bill (
-    Chapter_ID      int,
+    Chapter_ID      bigint,
     Bill_ID         UUID,
     Amount          float           NOT NULL,
     Amount_Paid     float           NOT NULL,
