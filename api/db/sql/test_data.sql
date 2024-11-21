@@ -40,21 +40,21 @@ INSERT INTO Member (Chapter_ID, Email, Fname, Lname, DOB, Is_Chapter_Admin, Memb
     (3, 'badhabits@hotmail.com', 'bad', 'babits', '2000-01-01', TRUE, 'FIXME', '888-888-8888');
 
 
-INSERT INTO Bill (Chapter_ID, Bill_ID, Amount, Amount_Paid, 'desc', Due_Date, Issue_Date, Is_External)
-    VALUES (1, 1234, 10, 0, 'No description', '2024-01-02 00:00:00', '2024-01-01', FALSE),
-    (1, 2345, 10, 0, 'No description', '2024-01-02 00:00:00', '2024-01-01', TRUE);
+INSERT INTO Bill (Chapter_ID, Bill_ID, Amount, Amount_Paid, "desc", Due_Date, Issue_Date, Is_External)
+    VALUES (1, '2990e7d7-281f-4716-9609-6848ebcdecaf', 10, 0, 'No description', '2024-01-02 00:00:00', '2024-01-01', FALSE),
+    (1, '20ddc4ad-da2b-4cd4-9e87-05d15890c466', 10, 0, 'No description', '2024-01-02 00:00:00', '2024-01-01', TRUE);
 
-
+--No member paying?
 INSERT INTO External_Bill (Bill_ID, Chapter_Contact, Payor_Name, P_Billing_Address, P_Email, P_Phone_Num)
-    VALUES (2345, 'Hankmeir', 'John', 'Fixmeville, MO', 'Johm@Johnmail.com', 'JOHN-JOH-NNY1');
+    VALUES ('20ddc4ad-da2b-4cd4-9e87-05d15890c466', 'FIXME', 'FIXME', 'FIXME', 'fix@me.com', 'FIX-ME1-2345');
 
 INSERT INTO Internal_Bill (Bill_ID, Member_Email)
-    VALUES (1234, 'dog@dogmail.com');
+    VALUES ('2990e7d7-281f-4716-9609-6848ebcdecaf', 'dog@dogmail.com');
 
-
-INSERT INTO Payment_Info (Member_Email, Nickname)
-    VALUES ('dog@dogmail.com', 'Dogpal'),
-    ('cat@catmail.com', 'catpal');
+--Make payment ID serial?
+INSERT INTO Payment_Info (Member_Email, Payment_ID, Nickname)
+    VALUES ('dog@dogmail.com', 1, 'Dogpal'),
+    ('cat@catmail.com', 2, 'catpal');
 
 INSERT INTO Bank_Account (Payment_ID, Account_Num, Routing_Num)
     VALUES (1, 123456789, 987654321);    

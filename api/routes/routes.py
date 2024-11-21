@@ -284,6 +284,45 @@ async def login(request: paymentRequest):
     }
     return response
 
+class editUserRequest(BaseModel):
+    id: int
+    name: str
+    role: str
+    email: str
+
+    class Config:
+        orm_mode = True
+
+
+@app.post("/edit-user")
+async def login(request: editUserRequest):
+
+    response = {
+        "message": "Edited User Successfully",
+    }
+    return response
+
+class editBillRequest(BaseModel):
+    invoicee_name: str
+    invoicee_id: str
+    bill_id: int
+    bill_name: str
+    amount: str
+    date: str
+    paid: bool
+
+    class Config:
+        orm_mode = True
+
+
+@app.post("/edit-bill")
+async def editBill(request: editBillRequest):
+
+    response = {
+        "message": "Payment successful",
+    }
+    return response
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=6969)

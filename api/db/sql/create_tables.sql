@@ -37,30 +37,30 @@ CREATE TABLE Chapter (
 CREATE TABLE "user" (
     Email       text,
     Password    text    NOT NULL,
-    Is_Admin    bool    NOT NULL,
+    Is_Admin    bool    NOT NULL DEFAULT False,
 
     PRIMARY KEY (Email)
 );
 
 -- Create Member table
 CREATE TABLE Member (
-    Chapter_ID          int,
+    Chapter_ID          bigint,
     Email               text    UNIQUE,
     Fname               text    NOT NULL,
     Lname               text    NOT NULL,
     DOB                 date    NOT NULL,
     Member_ID           serial  UNIQUE,
-    Member_Status       text    NOT NULL, --FIXME ADD CONTRAINT
-    Is_Chapter_Admin    bool    NOT NULL,
+    Member_Status       text, --FIXME ADD CONTRAINT
+    Is_Chapter_Admin    bool    NOT NULL DEFAULT False,
     Phone_Num           text    NOT NULL,
 
-    Foreign Key (Email) References "user" (Email),
+    Foreign Key (Email) References "user" (Email) ON DELETE CASCADE,
     Foreign Key (Chapter_ID) References Chapter (ID)
 );
 
 -- Create Bill table
 CREATE TABLE Bill (
-    Chapter_ID      int,
+    Chapter_ID      bigint,
     Bill_ID         UUID,
     Amount          float           NOT NULL,
     Amount_Paid     float           NOT NULL,
@@ -82,7 +82,7 @@ CREATE TABLE External_Bill (
     P_Email             text    NOT NULL,
     P_Phone_Num         text    NOT NULL,
 
-    FOREIGN KEY (Bill_ID) REFERENCES Bill (Bill_ID)
+    FOREIGN KEY (Bill_ID) REFERENCES Bill (Bill_ID) ON DELETE CASCADE
 );
 
 -- Create Internal_Bill table
@@ -90,8 +90,8 @@ CREATE TABLE Internal_Bill (
     Bill_ID         UUID,
     Member_Email    text,
 
-    FOREIGN KEY (Bill_ID) REFERENCES Bill (Bill_ID),
-    FOREIGN KEY (Member_Email) REFERENCES Member (Email)
+    FOREIGN KEY (Bill_ID) REFERENCES Bill (Bill_ID) ON DELETE CASCADE,
+    FOREIGN KEY (Member_Email) REFERENCES Member (Email) ON DELETE CASCADE
 );
 
 -- Create Payment_Info table
@@ -100,7 +100,7 @@ CREATE TABLE Payment_Info (
     Payment_ID      serial,
     Nickname        text    NOT NULL,
 
-    FOREIGN KEY (Member_Email) REFERENCES Member (Email),
+    FOREIGN KEY (Member_Email) REFERENCES Member (Email) ON DELETE CASCADE,
     PRIMARY KEY (Payment_ID)
 );
 
@@ -110,7 +110,7 @@ CREATE TABLE Bank_Account (
     Account_Num     int,
     Routing_Num     int,
 
-    FOREIGN KEY (Payment_ID) REFERENCES Payment_Info (Payment_ID),
+    FOREIGN KEY (Payment_ID) REFERENCES Payment_Info (Payment_ID) ON DELETE CASCADE,
     PRIMARY KEY (Account_Num, Routing_Num)
 );
 
@@ -122,6 +122,6 @@ CREATE TABLE Card (
     Exp_Date        varchar     NOT NULL,
     Name            varchar     NOT NULL,
 
-    FOREIGN KEY (Payment_ID) REFERENCES Payment_Info (Payment_ID),
+    FOREIGN KEY (Payment_ID) REFERENCES Payment_Info (Payment_ID) ON DELETE CASCADE,
     PRIMARY KEY (Card_Num)
 );
