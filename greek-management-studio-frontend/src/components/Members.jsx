@@ -10,13 +10,7 @@ const Members = () => {
 
   const Refresh = async () => {
     try {
-      const response = await fetch("/api/homepage", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: user.authToken,
-        },
-      });
+      const response = await user.get_with_headers("/api/homepage");
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

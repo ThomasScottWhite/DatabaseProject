@@ -37,13 +37,7 @@ const ViewBills = () => {
   const user = useUser();
   const Refresh = async () => {
     try {
-      const response = await fetch("/api/my-bills", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: user.authToken,
-        },
-      });
+      const response = await user.get_with_headers("/api/my-bills");
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

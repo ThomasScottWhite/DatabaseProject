@@ -38,7 +38,7 @@ export const UserProvider = ({ children }) => {
     return response;
   };
   const get_with_headers = async (route) => {
-    response = await fetch(route, {
+    const response = await fetch(route, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
