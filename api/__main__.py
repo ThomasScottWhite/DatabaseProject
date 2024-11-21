@@ -1,7 +1,5 @@
 import logging
-from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
 from rich.logging import RichHandler
 
 FORMAT = "%(message)s"
@@ -11,7 +9,12 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+
 from api.config import CONFIG
+from api.routes import ROUTERS
 
 
 @asynccontextmanager
@@ -24,6 +27,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+for router in ROUTERS:
+    app.include_router(router)
 
 
 if __name__ == "__main__":
