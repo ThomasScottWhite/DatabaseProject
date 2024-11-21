@@ -44,7 +44,7 @@ CREATE TABLE "user" (
 
 -- Create Member table
 CREATE TABLE Member (
-    Chapter_ID          bigint,
+    Chapter_ID          int,
     Email               text    UNIQUE,
     Fname               text    NOT NULL,
     Lname               text    NOT NULL,
@@ -60,7 +60,7 @@ CREATE TABLE Member (
 
 -- Create Bill table
 CREATE TABLE Bill (
-    Chapter_ID      bigint,
+    Chapter_ID      int,
     Bill_ID         UUID,
     Amount          float           NOT NULL,
     Amount_Paid     float           NOT NULL,
@@ -97,7 +97,7 @@ CREATE TABLE Internal_Bill (
 -- Create Payment_Info table
 CREATE TABLE Payment_Info (
     Member_Email    text,
-    Payment_ID      int,
+    Payment_ID      serial,
     Nickname        text    NOT NULL,
 
     FOREIGN KEY (Member_Email) REFERENCES Member (Email),
