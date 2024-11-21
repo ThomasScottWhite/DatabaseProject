@@ -2,7 +2,7 @@ import datetime
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, FastAPI, Header, HTTPException, Request, status
+from fastapi import APIRouter, Header, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import select
 
