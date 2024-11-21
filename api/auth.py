@@ -62,6 +62,15 @@ class Auth:
 
     @classmethod
     def get_auth(cls, token: str) -> Auth:
+        """Fetches a registered `Auth` object by token.
+
+        Args:
+            token (str): The token to fetch by.
+
+        Returns:
+            Auth: The `Auth` object, or the `NoAuth()` sentinel if `token`
+                doesn't correspond with anything.
+        """
         return cls._auths.get(token, NoAuth())
 
     def __init__(
@@ -209,6 +218,5 @@ def authenticate(
             return token
 
 
-@utils.export
-def get(token: str) -> Auth:
-    return Auth.get_auth(token)
+get = Auth.get_auth
+utils.export(get)
