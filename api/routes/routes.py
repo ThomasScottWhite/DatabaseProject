@@ -33,8 +33,9 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     message: str
     organization_id: str
-    account_id: str
+    email: str
     auth_token: str
+    is_admin: bool
 
     class Config:
         orm_mode = True
@@ -47,8 +48,9 @@ async def login(request: LoginRequest):
     response = LoginResponse(
         message="Login successful",
         organization_id="1",
-        account_id="1",
+        email="gamer@gmail.com"
         auth_token="1234",
+        is_admin=True,
     )
 
     return response

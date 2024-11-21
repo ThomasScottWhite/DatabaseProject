@@ -5,13 +5,25 @@ const UserContext = createContext(null);
 
 // Create the provider
 export const UserProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState({"authToken": null, "email": null, "organizationId": null});
 
     const login = (email, organizationId, accountId, authToken) => {
         setUser({ email, organizationId, accountId, authToken });
     };
 
-    const get_auth_token = async () => {
+
+    const fetch_with_headers = async(route) => {await fetch(route, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': user.authToken,
+            'Email' : user.email,
+            'Organization-Id' : user.organizationId,
+        },
+        body: JSON.stringify(payload),
+    })}
+
+    const get_auth_token = () => {
         if (user === null) {
             return null;
         }
