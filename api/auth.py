@@ -94,11 +94,41 @@ class Auth:
     def expired(self) -> bool:
         return self._expires <= time.time()
 
+    @property
+    def token(self) -> str:
+        return self._token
+
+    @property
+    def email(self) -> str:
+        return self._email
+
+    @property
+    def chapter(self) -> int | None:
+        return self._chapter
+
+    @property
+    def global_admin(self) -> bool:
+        return self._global_admin
+
+    @property
+    def chapter_admin(self) -> bool:
+        return self._chapter_admin
+
     def register_self(self):
         self._auths[self._token] = self
 
-    def _unregister_self(self):
+    def unregister_self(self):
         del self._auths[self._token]
+
+    def logged_in(self) -> _AuthResult:
+        """Returns whether this auth certifies that a user is logged in.
+
+        Only `NoAuth` returns anything except `AUTHORIZED`.
+
+        Returns:
+            _AuthResult: `AUTHORIZED`, unless this `Auth` is `NoAuth`.
+        """
+        return AUTHORIZED
 
     def is_chapter_admin(self, chapter: int) -> _AuthResult:
         """Returns whether this auth validates a user for chapter admin priviledges for the provided chapter.
@@ -107,7 +137,7 @@ class Auth:
             chapter (int): The chapter to be access at the administrator level.
         """
         if self.expired:
-            self._unregister_self()
+            self.unregister_self()
             return EXPIRED
 
         if self._global_admin or (self._chapter == chapter and self._chapter_admin):
@@ -122,7 +152,7 @@ class Auth:
             chapter (int): The chatper to be accessed at the member level.
         """
         if self.expired:
-            self._unregister_self()
+            self.unregister_self()
             return EXPIRED
 
         if self._global_admin or self._chapter == chapter:
@@ -137,7 +167,7 @@ class Auth:
             email (str): The email of the user to authorize access to.
         """
         if self.expired:
-            self._unregister_self()
+            self.unregister_self()
             return EXPIRED
 
         if self._global_admin or self._email == email:
@@ -148,7 +178,7 @@ class Auth:
     def is_global_admin(self) -> _AuthResult:
         """Returns whether this auth grants full administrative priviledges."""
         if self.expired:
-            self._unregister_self()
+            self.unregister_self()
             return EXPIRED
 
         return AUTHORIZED if self._global_admin else FORBIDDEN
@@ -169,13 +199,15 @@ class NoAuth(Auth):
     def _sentinel(self, *args, **kwargs) -> _AuthResult:
         return UNAUTHORIZED
 
-    is_global_admin = is_user = has_chapter_access = is_chapter_admin = _sentinel
+    logged_in = is_global_admin = is_user = has_chapter_access = is_chapter_admin = (
+        _sentinel
+    )
 
 
 @utils.export
 def authenticate(
     email: str, password: str, expires_in: int = DEFAULT_AUTH_LIFETIME
-) -> str | None:
+) -> Auth | None:
     """Generates an authentication token for the provided `(email, password)` pair.
 
     If the `(email, password)` pair is missing from the database,
@@ -188,12 +220,12 @@ def authenticate(
             the generated token with expire. Defaults to `DEFAULT_AUTH_LIFETIME`.
 
     Returns:
-        The authorization token if the `(email, password)` pair is valid, `None` otherwise.
+        The `Auth` if the `(email, password)` pair is valid, `None` otherwise.
     """
-    # TODO: complete this implementation!
 
     with db.get_connection() as conn:
-        user = db.tb.user.c
+        # validate credentials in the database and fetch relevant info
+        user = db.tb.user.c  # alias for table columns
         result = conn.execute(
             select(
                 user.is_admin,
@@ -205,17 +237,20 @@ def authenticate(
             .where(user.email == email, user.password == password)
         ).one_or_none()
 
+        # register login if successful
         if result is not None:
             token = str(uuid.uuid4())
-            Auth(
+            auth_obj = Auth(
                 token,
                 email,
                 result[0],
                 result[1],
                 result[2] or False,
                 expires_in=expires_in,
-            ).register_self()
-            return token
+            )
+            auth_obj.register_self()
+
+            return auth_obj
 
 
 get = Auth.get_auth
