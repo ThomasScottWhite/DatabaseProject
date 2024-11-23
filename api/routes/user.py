@@ -10,7 +10,7 @@ from api import auth, db
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/user")
+router = APIRouter(prefix="/user", tags=["user"])
 
 
 class Member(BaseModel):

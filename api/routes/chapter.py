@@ -10,7 +10,7 @@ from sqlalchemy import Connection, Row, Select, select
 
 from api import auth, db, models
 
-router = APIRouter(prefix="/chapter")
+router = APIRouter(prefix="/chapter", tags=["chapter"])
 
 logger = logging.getLogger(__name__)
 

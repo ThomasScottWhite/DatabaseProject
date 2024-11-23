@@ -10,7 +10,7 @@ from sqlalchemy import select
 
 from api import auth, db, models
 
-router = APIRouter(prefix="/member")
+router = APIRouter(prefix="/member", tags=["member"])
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,22 @@ def get_all_members(
         result = conn.execute(query).all()
 
     return result
+
+
+class CreateMemberRequest(BaseModel):
+    pass
+
+
+@router.post("")
+def create_member(
+    specification: CreateMemberRequest,
+    authorization: Annotated[str | None, Header()] = None,
+) -> models.Member:
+    """
+    creates new member; returns created member
+    equivalent to added a user to a chapter
+    """
+    pass
 
 
 @router.get("/{member_email}")
@@ -78,6 +94,19 @@ def get_specific_member(
     auth_checker.has_chapter_access(result._mapping["chapter_id"]).raise_for_http()
 
     return result
+
+
+@router.delete("/{member_email}")
+def delete_member(
+    member_email: str,
+    specification: CreateMemberRequest,
+    authorization: Annotated[str | None, Header()] = None,
+) -> models.Member:
+    """
+    creates new member; returns created member
+    equivalent to removing a user from a chapter
+    """
+    pass
 
 
 # TODO: allow None in type hint where applicable

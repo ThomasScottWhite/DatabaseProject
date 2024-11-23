@@ -10,6 +10,6 @@ from sqlalchemy import select
 
 from api import auth, db, models
 
-router = APIRouter(prefix="/organization")
+router = APIRouter(prefix="/organization", tags=["organization"])
 
 logger = logging.getLogger(__name__)
