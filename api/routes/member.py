@@ -19,6 +19,15 @@ logger = logging.getLogger(__name__)
 def get_all_members(
     authorization: Annotated[str | None, Header()] = None
 ) -> list[models.Member]:
+    """Returns a list of all members in the database.
+
+    Args:
+        authorization (Annotated[str  |  None, Header, optional): The auth token used to authorize this action.
+            Defaults to None.
+
+    Raises:
+        HTTPException: 401, 403; if the user does not have permission to perform this action.
+    """
     auth.get(authorization).is_global_admin().raise_for_http()
 
     with db.get_connection() as conn:
@@ -33,6 +42,17 @@ def get_all_members(
 def get_specific_member(
     member_email: str, authorization: Annotated[str | None, Header()] = None
 ) -> models.MemberWithSiteAdmin:
+    """Returns the details for a specific member.
+
+    Args:
+        member_email (str): _description_
+        authorization (Annotated[str  |  None, Header, optional): The auth token used to authorize this action.
+            Defaults to None.
+
+    Raises:
+        HTTPException: 404; if the specified member does not exist.
+        HTTPException: 401, 403; if the user does not have permission to perform this action.
+    """
 
     auth_checker = auth.get(authorization)
 
@@ -79,6 +99,28 @@ def update_member(
     updates: MemberUpdateRequest,
     authorization: Annotated[str | None, Header()] = None,
 ) -> models.Member:
+    """Partially updates a member according to the values provided in `updates`.
+
+    Note: depending on what is modified, different permissions are needed. For
+    instance, you must be a global admin to modify email, chapter admin of the
+    member's chapter to modified is_chapter_admin, and the user (or chapter admin)
+    to modify all other fields.
+
+    Args:
+        member_email (str): The email of the member to change.
+        updates (MemberUpdateRequest): The values to modify.
+        authorization (Annotated[str  |  None, Header, optional): The auth token used to authorize this action.
+            Defaults to None.
+
+    Raises:
+        HTTPException: 304; if the request goes through but nothing is modified.
+        HTTPException: 404; if the specified member does not exist.
+        HTTPException: 401, 403; if the user does not have permission to perform this action.
+
+    Returns:
+        models.Member: The member specified by `member_email` with the changes applied.
+    """
+
     auth_checker = auth.get(authorization)
     auth_checker.logged_in().raise_for_http()
 
