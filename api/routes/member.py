@@ -6,13 +6,38 @@ from typing import Annotated
 
 from fastapi import APIRouter, Header, HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import Connection, select
 
 from api import auth, db, models
 
 router = APIRouter(prefix="/member", tags=["member"])
 
 logger = logging.getLogger(__name__)
+
+_MEMBER_NOT_EXISTS = HTTPException(
+    status.HTTP_404_NOT_FOUND, "Specified member does not exist."
+)
+
+
+def _get_chapter_id_from_member_email(conn: Connection, member_email: str) -> int:
+    """Returns the chapter ID corresponding to the provided email, if applicable; else
+    raises an HTTP 404 exception.
+
+    Args:
+        conn (Connection): The database connection with which to query the database.
+        member_email (str): The email to for which to aquire the corresponding chapter ID.
+
+    Raises:
+        HTTPException: 404; if there is no Member with email `member_email`.
+    """
+    result = conn.execute(
+        select(db.tb.member.c.chapter_id).where(db.tb.member.c.email == member_email)
+    ).one_or_none()
+
+    if result is None:
+        raise _MEMBER_NOT_EXISTS
+
+    return result[0]
 
 
 @router.get("")
@@ -38,20 +63,37 @@ def get_all_members(
     return result
 
 
-class CreateMemberRequest(BaseModel):
-    pass
-
-
 @router.post("")
 def create_member(
-    specification: CreateMemberRequest,
+    specification: models.CreateMemberRequest,
     authorization: Annotated[str | None, Header()] = None,
 ) -> models.Member:
+    """Creates a new member.
+
+    Note: specification.email must correspond to an existing user that is not already already a
+    member of a chapter.
+
+    Args:
+        specification (models.CreateMemberRequest): The specification of the member to create.
+        authorization (Annotated[str  |  None, Header, optional): The auth token used to authorize this action.
+            Defaults to None.
+
+    Raises:
+        HTTPException: 401, 403; if the user does not have permission to perform this action.
+
+    Returns:
+        models.Member: The newly created member as it appears in the database.
     """
-    creates new member; returns created member
-    equivalent to added a user to a chapter
-    """
-    pass
+    auth_checker = auth.get(authorization)
+    (
+        auth_checker.is_user(specification.email)
+        or auth_checker.is_chapter_admin(specification.chapter_id)
+    ).raise_for_http()
+
+    with db.begin() as conn:
+        result = db.create_member(conn, auth_checker, specification)
+
+    return result
 
 
 @router.get("/{member_email}")
@@ -87,26 +129,42 @@ def get_specific_member(
         result = conn.execute(query).one_or_none()
 
     if result is None:
-        raise HTTPException(
-            status.HTTP_404_NOT_FOUND, "Specified member does not exist."
-        )
+        raise _MEMBER_NOT_EXISTS
 
     auth_checker.has_chapter_access(result._mapping["chapter_id"]).raise_for_http()
 
     return result
 
 
-@router.delete("/{member_email}")
+@router.delete("/{member_email}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_member(
     member_email: str,
-    specification: CreateMemberRequest,
     authorization: Annotated[str | None, Header()] = None,
-) -> models.Member:
+):
+    """Deletes an member; that is, removes a user from as a member of a chapter.
+
+    Args:
+        member_email (str): The email of the member to remove.
+        authorization (Annotated[str  |  None, Header, optional): The auth token used to authorize this action.
+            Defaults to None.
+
+    Raises:
+        HTTPException: 401, 403; if the user does not have permission to perform this action.
     """
-    creates new member; returns created member
-    equivalent to removing a user from a chapter
-    """
-    pass
+
+    auth_checker = auth.get(authorization)
+
+    if not auth_checker.is_user(member_email):
+        auth_checker.logged_in().raise_for_http()
+
+        with db.get_connection() as conn:
+            chapter_id = _get_chapter_id_from_member_email(conn, member_email)
+
+        auth_checker.is_chapter_admin(chapter_id).raise_for_http()
+
+    with db.begin() as conn:
+        query = db.tb.member.delete().where(db.tb.member.c.email == member_email)
+        conn.execute(query)
 
 
 # TODO: allow None in type hint where applicable
@@ -154,19 +212,7 @@ def update_member(
     auth_checker.logged_in().raise_for_http()
 
     with db.get_connection() as conn:
-
-        result = conn.execute(
-            select(db.tb.member.c.chapter_id).where(
-                db.tb.member.c.email == member_email
-            )
-        ).one_or_none()
-
-        if result is None:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, "Specified member does not exist."
-            )
-
-        (member_chapter_id,) = result
+        member_chapter_id = _get_chapter_id_from_member_email(conn, member_email)
 
     # exclude_unset is important; we only want data manually set
     update_dict = updates.model_dump(exclude_unset=True)

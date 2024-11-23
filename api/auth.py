@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 import time
-import uuid
 from typing import Any
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
 
-from api import db, utils
+from api import utils
 
 DEFAULT_AUTH_LIFETIME = 7201
 
@@ -218,56 +216,7 @@ class NoAuth(Auth):
     )
 
 
-@utils.export
-def authenticate(
-    email: str, password: str, expires_in: int = DEFAULT_AUTH_LIFETIME
-) -> Auth | None:
-    """Generates an authentication token for the provided `(email, password)` pair.
-
-    If the `(email, password)` pair is missing from the database,
-    `None` is returned instead.
-
-    Args:
-        email (str): The email of the user.
-        password (str): The password of the user.
-        expires_in (int, optional): The number of seconds after which
-            the generated token with expire. Defaults to `DEFAULT_AUTH_LIFETIME`.
-
-    Returns:
-        The `Auth` if the `(email, password)` pair is valid, `None` otherwise.
-    """
-
-    with db.get_connection() as conn:
-        # validate credentials in the database and fetch relevant info
-        user = db.tb.user.c  # alias for table columns
-        result = conn.execute(
-            select(
-                user.is_admin,
-                db.tb.member.c.chapter_id,
-                db.tb.member.c.is_chapter_admin,
-            )
-            .select_from(db.tb.user)
-            .join(db.tb.member, isouter=True)
-            .where(user.email == email, user.password == password)
-        ).one_or_none()
-
-        # register login if successful
-        if result is not None:
-            token = str(uuid.uuid4())
-            auth_obj = Auth(
-                token,
-                email,
-                result[0],
-                result[1],
-                result[2] or False,
-                expires_in=expires_in,
-            )
-            auth_obj.register_self()
-
-            return auth_obj
-
-
 get = Auth.get_auth
 utils.export(get)
 
-Auth("bypass", "", True, None, True).register_self()
+BYPASS = Auth("bypass", "", True, None, True).register_self()

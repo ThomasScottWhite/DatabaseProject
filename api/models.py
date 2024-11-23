@@ -29,25 +29,18 @@ class Member(HasEmail):
     phone_num: str | None = None
 
 
+class CreateMemberRequest(HasEmail):
+    chapter_id: int
+    fname: str
+    lname: str
+    dob: datetime.date
+    phone_num: str
+    member_status: str | None = None
+    is_chapter_admin: bool | None = None
+
+
 class MemberWithSiteAdmin(Member):
     is_site_admin: bool
-
-
-class Chapter(BaseModel):
-    name: str
-    billing_address: str
-    org_name: str
-    school_name: str
-    id: int
-
-
-class ChapterWithOrg(Chapter):
-    greek_letters: str
-    type: str
-
-
-class ChapterWithOrgAndMembers(ChapterWithOrg):
-    members: list[Member]
 
 
 class School(BaseModel):
@@ -59,3 +52,20 @@ class Organization(BaseModel):
     name: str
     greek_letters: str
     type: str
+
+
+class Chapter(BaseModel):
+    name: str
+    billing_address: str
+    org_name: str
+    school_name: str
+    id: int
+
+
+class ChapterWithDetails(Chapter):
+    organization: Organization
+    school: School
+
+
+class ChapterWithDetailsAndMembers(ChapterWithDetails):
+    members: list[Member]

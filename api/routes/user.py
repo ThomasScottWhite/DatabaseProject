@@ -6,14 +6,14 @@ from fastapi import APIRouter, Header, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import select
 
-from api import auth, db
+from api import auth, db, models
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/user", tags=["user"])
 
 
-class Member(BaseModel):
+class MemberInfo(BaseModel):
     chapter_id: int
     fname: str
     lname: str
@@ -22,8 +22,7 @@ class Member(BaseModel):
     is_chapter_admin: bool | None = None
 
 
-class User(BaseModel):
-    email: str
+class User(models.HasEmail):
     password: str
 
 
@@ -57,7 +56,7 @@ def login(req: LoginRequest) -> LoginResponse:
     """
 
     logger.info(f"Logging in user {req.email}")
-    authorization = auth.authenticate(**dict(req))
+    authorization = db.authenticate(**dict(req))
 
     if authorization is None:
         raise HTTPException(
@@ -99,7 +98,7 @@ def logout(authorization: Annotated[str | None, Header()] = None) -> dict[str, s
 
 class CreateUserRequest(User):
     is_admin: bool | None = None
-    organization_info: Member | None = None
+    organization_info: MemberInfo | None = None
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -147,19 +146,13 @@ def create_user(
 
         # create member if needed
         if user.organization_info is not None:
-            info_dict = user.organization_info.model_dump()
-
-            if user.organization_info.is_chapter_admin is None:
-                info_dict.pop("is_chapter_admin")
-            else:
-                auth_checker.is_chapter_admin(
-                    user.organization_info.chapter_id
-                ).raise_for_http()
-
-            member_insert = db.tb.member.insert().values(
-                dict(**info_dict, email=user.email)
+            db.create_member(
+                conn,
+                auth_checker,
+                models.CreateMemberRequest(
+                    **user.organization_info.model_dump(), email=user.email
+                ),
             )
-            conn.execute(member_insert)
 
         conn.commit()
 
@@ -180,7 +173,7 @@ def delete_user(user_email: str, authorization: Annotated[str | None, Header()] 
     auth_checker = auth.get(authorization)
     auth_checker.is_user(user_email).raise_for_http()
 
-    with db.get_engine().begin() as conn:
+    with db.begin() as conn:
         conn.execute(db.tb.user.delete().where(db.tb.user.c.email == user_email))
 
         # if the user deletes their own account, invalidate their auth token
@@ -231,7 +224,7 @@ def update_user(
         update_clause["password"] = req.password
         unregister_auth = True
 
-    with db.get_engine().begin() as conn:
+    with db.begin() as conn:
         conn.execute(query.values(**update_clause))
 
     # delay logout to after change goes through

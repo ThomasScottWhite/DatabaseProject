@@ -15,6 +15,11 @@ router = APIRouter(prefix="/chapter", tags=["chapter"])
 logger = logging.getLogger(__name__)
 
 
+_CHAPTER_NOT_EXISTS = HTTPException(
+    status.HTTP_404_NOT_FOUND, "Specified chapter does not exist."
+)
+
+
 def _get_chapter_members(conn: Connection, chapter_id: int) -> Sequence[Row[Any]]:
     return conn.execute(
         db.tb.member.select().where(db.tb.member.c.chapter_id == chapter_id)
@@ -41,7 +46,7 @@ def get_all_chapters(
     auth.get(authorization).logged_in().raise_for_http()
 
     with db.get_connection() as conn:
-        query = db.tb.select()
+        query = db.tb.chapter.select()
 
         result = conn.execute(query).all()
 
@@ -53,7 +58,7 @@ def get_specific_chapter(
     chapter_id: int,
     include_members: bool = False,
     authorization: Annotated[str | None, Header()] = None,
-) -> models.ChapterWithOrgAndMembers | models.ChapterWithOrg:
+) -> models.ChapterWithDetailsAndMembers | models.ChapterWithDetails:
     """_summary_
 
     Args:
@@ -85,20 +90,30 @@ def get_specific_chapter(
                 *db.tb.chapter.c,
                 db.tb.organization.c.greek_letters,
                 db.tb.organization.c.type,
+                db.tb.school.c.billing_address.label("sba"),
+                db.tb.school.c.name.label("sname"),
             )
             .select_from(db.tb.chapter)
             .join(db.tb.organization)
+            .join(db.tb.school)
             .where(db.tb.chapter.c.id == chapter_id)
         )
 
         result = conn.execute(chapter_query).one_or_none()
 
         if result is None:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, "Specified chapter does not exist"
-            )
+            raise _CHAPTER_NOT_EXISTS
 
         result = dict(result._mapping)
+
+        result["school"] = models.School(
+            name=result.pop("sname"), billing_address=result.pop("sba")
+        )
+        result["organization"] = models.Organization(
+            name=result["org_name"],
+            greek_letters=result.pop("greek_letters"),
+            type=result.pop("type"),
+        )
 
         logger.debug(result)
 
@@ -108,12 +123,14 @@ def get_specific_chapter(
             ]
 
     return (
-        models.ChapterWithOrgAndMembers if include_members else models.ChapterWithOrg
+        models.ChapterWithDetailsAndMembers
+        if include_members
+        else models.ChapterWithDetails
     )(**result)
 
 
 @router.delete("/{chapter_id}")
-def get_specific_chapter(
+def delete_chapter(
     chapter_id: int, authorization: Annotated[str | None, Header()] = None
 ):
     """Deletes the specified chapter.
@@ -128,23 +145,65 @@ def get_specific_chapter(
     """
     auth.get(authorization).is_chapter_admin(chapter_id).raise_for_http()
 
-    with db.get_engine().begin() as conn:
+    with db.begin() as conn:
         query = db.tb.chapter.delete().where(db.tb.chapter.c.chapter_id == chapter_id)
         conn.execute(query)
 
 
-@router.post("/{chapter_id}")
-def get_specific_chapter(
-    chapter_id: int, authorization: Annotated[str | None, Header()] = None
-):
-    pass
+class CreateChapter(BaseModel):
+    name: str
+    billing_address: str
+    org_name: str
+    school_name: str
+
+
+@router.post("")
+def create_chapter(
+    info: CreateChapter, authorization: Annotated[str | None, Header()] = None
+) -> models.Chapter:
+    auth.get(authorization).logged_in().raise_for_http()
+
+    with db.begin() as conn:
+
+        query = (
+            db.tb.chapter.insert().returning(*db.tb.chapter.c).values(info.model_dump())
+        )
+
+        result = conn.execute(query).one()
+
+    return result
+
+
+class UpdateChapter(BaseModel):
+    name: str = None
+    billing_address: str = None
+    org_name: str = None
+    school_name: str = None
 
 
 @router.patch("/{chapter_id}")
-def get_specific_chapter(
-    chapter_id: int, authorization: Annotated[str | None, Header()] = None
-):
-    pass
+def update_chapter(
+    chapter_id: int,
+    updates: UpdateChapter,
+    authorization: Annotated[str | None, Header()] = None,
+) -> models.Chapter:
+    auth.get(authorization).is_chapter_admin(chapter_id).raise_for_http()
+
+    with db.begin() as conn:
+
+        query = (
+            db.tb.chapter.update()
+            .returning(*db.tb.chapter.c)
+            .values(**updates.model_dump(exclude_unset=True))
+            .where(db.tb.chapter.c.id == chapter_id)
+        )
+
+        result = conn.execute(query).one_or_none()
+
+        if result is None:
+            raise _CHAPTER_NOT_EXISTS
+
+    return result
 
 
 @router.get("/{chapter_id}/members")
