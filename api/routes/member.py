@@ -10,8 +10,6 @@ from sqlalchemy import select
 
 from api import auth, db, models
 
-# from api.db import get_db  # Absolute import instead of ..
-
 router = APIRouter(prefix="/member")
 
 logger = logging.getLogger(__name__)
