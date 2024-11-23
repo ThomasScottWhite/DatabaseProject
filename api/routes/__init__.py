@@ -20,4 +20,4 @@ for path in Path(__file__).parent.iterdir():
     if "router" in dir(mod):
         ROUTERS.append(mod.router)
     else:
-        logger.debug(f"Loading module api.routes.{path.stem}")
+        logger.warning(f"Failed to load module api.routes.{path.stem}")
