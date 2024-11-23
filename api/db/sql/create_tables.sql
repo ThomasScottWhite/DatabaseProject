@@ -55,7 +55,7 @@ CREATE TABLE Member (
     Phone_Num           text    NOT NULL,
 
     Foreign Key (Email) References "user" (Email) ON DELETE CASCADE,
-    Foreign Key (Chapter_ID) References Chapter (ID)
+    Foreign Key (Chapter_ID) References Chapter (ID) ON DELETE CASCADE
 );
 
 -- Create Bill table
@@ -69,7 +69,7 @@ CREATE TABLE Bill (
     Issue_Date      date            NOT NULL,
     Is_External     bool            NOT NULL,
 
-    FOREIGN KEY (Chapter_ID) REFERENCES Chapter (ID),
+    FOREIGN KEY (Chapter_ID) REFERENCES Chapter (ID) ON DELETE CASCADE,
     PRIMARY KEY (Bill_ID)
 );
 
