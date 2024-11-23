@@ -102,7 +102,7 @@ class CreateUserRequest(User):
     organization_info: Member | None = None
 
 
-@router.post("")
+@router.post("", status_code=status.HTTP_201_CREATED)
 def create_user(
     user: CreateUserRequest, authorization: Annotated[str | None, Header()] = None
 ) -> dict[str, str]:
