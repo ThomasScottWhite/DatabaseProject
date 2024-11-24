@@ -63,9 +63,17 @@ class Chapter(BaseModel):
 
 
 class ChapterWithDetails(Chapter):
-    organization: Organization
     school: School
+    organization: Organization
 
 
 class ChapterWithDetailsAndMembers(ChapterWithDetails):
     members: list[Member]
+
+
+class OrganizationWithChapters(Organization):
+    chapters: list[Chapter]
+
+
+class SchoolWithChapters(School):
+    chapters: list[Chapter]
