@@ -11,7 +11,12 @@ logger = logging.getLogger(__name__)
 
 logger.debug("Loading routes...")
 for path in Path(__file__).parent.iterdir():
-    if not path.is_file() or path.stem.startswith("__"):
+    # only load python files, ignoring those with "magic" names
+    if (
+        not path.is_file()
+        or not path.suffix.lower() == ".py"
+        or path.stem.startswith("__")
+    ):
         continue
 
     logger.debug(f"Loading module api.routes.{path.stem}")
