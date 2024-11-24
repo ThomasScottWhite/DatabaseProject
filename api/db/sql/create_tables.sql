@@ -28,8 +28,8 @@ CREATE TABLE Chapter (
     School_Name         text,
     ID                  serial,
 
-    FOREIGN KEY (Org_Name) REFERENCES Organization (Name),
-    FOREIGN KEY (School_Name) REFERENCES School (Name),
+    FOREIGN KEY (Org_Name) REFERENCES Organization (Name) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (School_Name) REFERENCES School (Name) ON UPDATE CASCADE ON DELETE CASCADE,
     PRIMARY KEY (ID)
 );
 
