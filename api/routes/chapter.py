@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import logging
 from datetime import date
-from typing import Annotated, Any, Final, Sequence
+from typing import Annotated, Any, Sequence
 
 from fastapi import APIRouter, Header, HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy import Connection, Row, Select, select
+from sqlalchemy import Connection, Row, select
 
 from api import auth, db, models
 
@@ -21,6 +21,13 @@ _CHAPTER_NOT_EXISTS = HTTPException(
 
 
 def _get_chapter_members(conn: Connection, chapter_id: int) -> Sequence[Row[Any]]:
+    """Returns the members of the specified chapter.
+
+    Args:
+        conn (Connection): The database connection with which to perform the query.
+        chapter_id (int): The ID of the chapter from which to pull members.
+    """
+
     return conn.execute(
         db.tb.member.select().where(db.tb.member.c.chapter_id == chapter_id)
     ).all()
@@ -161,6 +168,19 @@ class CreateChapter(BaseModel):
 def create_chapter(
     info: CreateChapter, authorization: Annotated[str | None, Header()] = None
 ) -> models.Chapter:
+    """Creates a chapter.
+
+    Args:
+        info (CreateChapter): The specifications of the new chapter.
+        authorization (Annotated[str  |  None, Header, optional): The auth token used to authorize this action.
+            Defaults to None.
+
+    Raises:
+        HTTPException: 401, 403; if the user does not have permission to perform this action.
+
+    Returns:
+        models.Chapter: The created chapter.
+    """
     auth.get(authorization).logged_in().raise_for_http()
 
     with db.begin() as conn:
@@ -187,6 +207,21 @@ def update_chapter(
     updates: UpdateChapter,
     authorization: Annotated[str | None, Header()] = None,
 ) -> models.Chapter:
+    """Partially updates an existing chapter.
+
+    Args:
+        chapter_id (int): The chapter to update.
+        updates (UpdateChapter): The fields to update. Any fields that are not provided will not be updated.
+        authorization (Annotated[str  |  None, Header, optional): The auth token used to authorize this action.
+            Defaults to None.
+
+    Raises:
+        HTTPException: 404; if the specified chapter does not exist.
+        HTTPException: 401, 403; if the user does not have permission to perform this action.
+
+    Returns:
+        models.Chapter: The modified chapter's updated information in its entirety.
+    """
     auth.get(authorization).is_chapter_admin(chapter_id).raise_for_http()
 
     with db.begin() as conn:
