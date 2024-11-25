@@ -11,7 +11,7 @@ const MainPage = () => {
   const user = useUser();
   console.log(user);
   if (!user) {
-    return <div>Loading...</div>; // Adjust as needed
+    return <div>Loading...</div>;
   }
   return (
     <Container className="mt-5">

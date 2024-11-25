@@ -1,58 +1,31 @@
 import React, { useState, useEffect } from "react";
-import { Table, Container, Button, Form } from "react-bootstrap";
+import { Table, Container, Button, Modal, Form } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/user_context";
 
 const ViewBills = () => {
-  const [bills, setBills] = useState(null);
-  const [editableBills, setEditableBills] = useState([]);
-  const [editMode, setEditMode] = useState(false);
+  const [bills, setBills] = useState(null); // Initialize with null to indicate loading state
+  const [selectedBill, setSelectedBill] = useState(null); // Bill to edit
+  const [showEditModal, setShowEditModal] = useState(false); // Modal visibility
+  const [editData, setEditData] = useState({});
   const user = useUser();
+  const navigate = useNavigate();
 
   const Refresh = async () => {
     try {
-      const response = await user.get_with_headers("/api/outgoing-bills");
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setBills(data.bills);
-      setEditableBills(data.bills); // Initialize editableBills
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
-
-  const EditBill = async (updatedBill) => {
-    try {
-      const response = await user.post_with_headers(
-        `/api/update_bill/${updatedBill.invoicee_id}`,
-        updatedBill
+      const memberEmail = user.user.email; // Get the member email from user context
+      const response = await user.get_with_headers(
+        `/api/member/${memberEmail}/bills`
       );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      await Refresh(); // Refresh data after update
+      const data = await response.json();
+      setBills(data);
     } catch (error) {
-      console.error("Error updating bill:", error);
-    }
-  };
-
-  const handleInputChange = (id, field, value) => {
-    setEditableBills((prev) =>
-      prev.map((bill) =>
-        bill.invoicee_id === id ? { ...bill, [field]: value } : bill
-      )
-    );
-  };
-
-  const handleSubmit = (id) => {
-    const updatedBill = editableBills.find((bill) => bill.invoicee_id === id);
-    if (updatedBill) {
-      EditBill(updatedBill);
+      console.error("Error fetching data:", error);
     }
   };
 
@@ -60,100 +33,150 @@ const ViewBills = () => {
     Refresh();
   }, []);
 
+  const handlePay = (bill) => {
+    navigate(`/payment/${bill.bill_id}/${bill.amount}/${bill.desc}`);
+  };
+
+  const handleEdit = (bill) => {
+    setSelectedBill(bill);
+    setEditData(bill); // Initialize with current bill data
+    setShowEditModal(true); // Show the modal
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const response = await user.patch_with_headers(
+        `/api/bill/internal/${selectedBill.bill_id}`,
+        editData
+      );
+
+      if (response.ok) {
+        setShowEditModal(false);
+        Refresh();
+      } else {
+        console.error("Failed to save edits:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error saving edits:", error);
+    }
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
   if (bills === null) {
-    return <h2>Loading...</h2>;
+    return (
+      <Container className="mt-5">
+        <h2 className="text-center mb-4">Loading Bills...</h2>
+      </Container>
+    );
   }
 
   return (
     <Container className="mt-5">
-      <h2 className="text-center mb-4">Outgoing Bills</h2>
+      <h2 className="text-center mb-4">View Bills</h2>
       <Table striped bordered hover>
         <thead>
           <tr>
             <th>#</th>
-            <th>Invoicee</th>
-            <th>Bill Name</th>
+            <th>Bill Id</th>
+            <th>Description</th>
             <th>Amount ($)</th>
             <th>Due Date</th>
-            {editMode && <th>Actions</th>}
+            <th>Issue Date</th>
+            <th>Source</th>
+            <th>Paid</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {editableBills.map((bill) => (
-            <tr key={bill.invoicee_id}>
-              <td>{bill.invoicee_id}</td>
+          {bills.map((bill, index) => (
+            <tr key={bill.bill_id}>
+              <td>{index + 1}</td>
+              <td>{bill.bill_id}</td>
+              <td>{bill.desc}</td>
+              <td>{bill.amount}</td>
+              <td>{new Date(bill.due_date).toLocaleDateString()}</td>
+              <td>{new Date(bill.issue_date).toLocaleDateString()}</td>
+              <td>{bill.is_external ? "External" : "Internal"}</td>
+              <td>{bill.amount_paid > 0 ? "Yes" : "No"}</td>
               <td>
-                {editMode ? (
-                  <Form.Control
-                    type="text"
-                    value={bill.invoicee_name}
-                    onChange={(e) =>
-                      handleInputChange(bill.invoicee_id, "invoicee_name", e.target.value)
-                    }
-                  />
-                ) : (
-                  bill.invoicee_name
-                )}
-              </td>
-              <td>
-                {editMode ? (
-                  <Form.Control
-                    type="text"
-                    value={bill.bill_name}
-                    onChange={(e) =>
-                      handleInputChange(bill.invoicee_id, "bill_name", e.target.value)
-                    }
-                  />
-                ) : (
-                  bill.bill_name
-                )}
-              </td>
-              <td>
-                {editMode ? (
-                  <Form.Control
-                    type="number"
-                    value={bill.amount}
-                    onChange={(e) =>
-                      handleInputChange(bill.invoicee_id, "amount", e.target.value)
-                    }
-                  />
-                ) : (
-                  bill.amount
-                )}
-              </td>
-              <td>
-                {editMode ? (
-                  <Form.Control
-                    type="date"
-                    value={bill.date}
-                    onChange={(e) =>
-                      handleInputChange(bill.invoicee_id, "date", e.target.value)
-                    }
-                  />
-                ) : (
-                  bill.date
-                )}
-              </td>
-              {editMode && (
-                <td>
-                  <Button
-                    variant="success"
-                    size="sm"
-                    onClick={() => handleSubmit(bill.invoicee_id)}
-                  >
-                    Submit
+                {bill.amount_paid === 0 && (
+                  <Button variant="success" onClick={() => handlePay(bill)}>
+                    Pay
                   </Button>
-                </td>
-              )}
+                )}
+                <Button variant="warning" onClick={() => handleEdit(bill)}>
+                  Edit
+                </Button>
+              </td>
             </tr>
           ))}
         </tbody>
       </Table>
-      <div className="text-center mt-4">
-        <Button onClick={() => setEditMode(!editMode)}>
-          {editMode ? "Cancel Edit" : "Edit Bills"}
-        </Button>
-      </div>
+
+      {/* Edit Modal */}
+      {selectedBill && (
+        <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Edit Bill</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form>
+              <Form.Group>
+                <Form.Label>Description</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="desc"
+                  value={editData.desc}
+                  onChange={handleEditChange}
+                />
+              </Form.Group>
+              <Form.Group>
+                <Form.Label>Amount</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="amount"
+                  value={editData.amount}
+                  onChange={handleEditChange}
+                />
+              </Form.Group>
+              <Form.Group>
+                <Form.Label>Due Date</Form.Label>
+                <Form.Control
+                  type="date"
+                  name="due_date"
+                  value={
+                    new Date(editData.due_date).toISOString().split("T")[0]
+                  }
+                  onChange={handleEditChange}
+                />
+              </Form.Group>
+              <Form.Group>
+                <Form.Label>Issue Date</Form.Label>
+                <Form.Control
+                  type="date"
+                  name="issue_date"
+                  value={
+                    new Date(editData.issue_date).toISOString().split("T")[0]
+                  }
+                  onChange={handleEditChange}
+                />
+              </Form.Group>
+            </Form>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleSaveEdit}>
+              Save Changes
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
     </Container>
   );
 };

@@ -4,47 +4,23 @@ import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/user_context";
 
 const ViewBills = () => {
-  const [bills, setBills] = useState([
-    {
-      invoicee_id: 1,
-      bill_name: "Chapter Rent",
-      amount: 1000,
-      date: "2024-10-30",
-      invoicee_name: "Joe",
-      paid: "Unpaid",
-      bill_id: 1,
-    },
-    {
-      invoicee_id: 2,
-      bill_name: "Greek Markup",
-      amount: 500,
-      date: "2024-11-05",
-      invoicee_name: "Joe",
-      paid: "Unpaid",
-      bill_id: 2,
-    },
-    {
-      invoicee_id: 3,
-      bill_name: "Parking (we are evil)",
-      amount: 30,
-      date: "2024-10-28",
-      invoicee_name: "Joe",
-      paid: "Unpaid",
-      bill_id: 3,
-    },
-  ]);
-  const payload = { someKey: "someValue" };
+  const [bills, setBills] = useState(null); // Initialize with null to indicate loading state
   const user = useUser();
+  const navigate = useNavigate();
+
   const Refresh = async () => {
     try {
-      const response = await user.get_with_headers("/api/my-bills");
+      const memberEmail = user.user.email; // Get the member email from user context
+      const response = await user.get_with_headers(
+        `/api/member/${memberEmail}/bills`
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      setBills(data.bills);
+      setBills(data); // Directly set the fetched data
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -54,11 +30,17 @@ const ViewBills = () => {
     Refresh();
   }, []);
 
-  const navigate = useNavigate();
-
   const handlePay = (bill) => {
-    navigate(`/payment/${bill.bill_id}/${bill.amount}/${bill.bill_name}`);
+    navigate(`/payment/${bill.bill_id}/${bill.amount}/${bill.desc}`);
   };
+
+  if (bills === null) {
+    return (
+      <Container className="mt-5">
+        <h2 className="text-center mb-4">Loading Bills...</h2>
+      </Container>
+    );
+  }
 
   return (
     <Container className="mt-5">
@@ -68,31 +50,31 @@ const ViewBills = () => {
           <tr>
             <th>#</th>
             <th>Bill Id</th>
-            <th>Bill Name</th>
+            <th>Description</th>
             <th>Amount ($)</th>
             <th>Due Date</th>
+            <th>Issue Date</th>
             <th>Source</th>
-            <th>Status</th>
+            <th>Paid</th>
             <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {bills.map((bill) => (
-            <tr key={bill.invoicee_id}>
-              <td>{bill.invoicee_id}</td>
+          {bills.map((bill, index) => (
+            <tr key={bill.bill_id}>
+              <td>{index + 1}</td>
               <td>{bill.bill_id}</td>
-              <td>{bill.bill_name}</td>
+              <td>{bill.desc}</td>
               <td>{bill.amount}</td>
-              <td>{bill.date}</td>
-              <td>{bill.invoicee_name}</td>
-              <td>{bill.paid ? "Paid" : "Unpaid"}</td>
+              <td>{new Date(bill.due_date).toLocaleDateString()}</td>
+              <td>{new Date(bill.issue_date).toLocaleDateString()}</td>
+              <td>{bill.is_external ? "External" : "Internal"}</td>
+              <td>{bill.amount_paid > 0 ? "Yes" : "No"}</td>
               <td>
-                {!bill.paid ? (
+                {bill.amount_paid === 0 && (
                   <Button variant="success" onClick={() => handlePay(bill)}>
                     Pay
                   </Button>
-                ) : (
-                  "Paid"
                 )}
               </td>
             </tr>

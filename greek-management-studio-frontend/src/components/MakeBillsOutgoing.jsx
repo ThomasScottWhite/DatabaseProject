@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { Form, Button, Container, Row, Col } from "react-bootstrap";
 import { useUser } from "../context/user_context";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 
 const MakeBills = () => {
   const [billName, setBillName] = useState("");
@@ -11,9 +9,11 @@ const MakeBills = () => {
   const [payerBillAddress, setPayerBillAddress] = useState("");
   const [payerEmail, setPayerEmail] = useState("");
   const [payerPhone, setPayerPhone] = useState("");
-  const [dueDate, setDueDate] = useState(new Date());
+  const [dueDate, setDueDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
   const [amount, setAmount] = useState("");
-
+  const [invoiceeId, setInvoiceeId] = useState("");
   const user = useUser();
 
   const make_bill_request = async (e) => {
@@ -27,20 +27,26 @@ const MakeBills = () => {
       payer_email: payerEmail,
       payer_phone: payerPhone,
       due_date: dueDate,
-      amount: amount,
+      amount: Number(amount),
+      invoicee_id: user.user.chapter_id,
+      date: new Date().toISOString().split("T")[0],
     };
 
     try {
       const response = await user.post_with_headers(
-        "/api/make-external-bill",
+        "/api/bill/external",
         payload
       );
       if (response.ok) {
-        alert("Bill Made");
+        alert("Bill Made Successfully");
+      } else {
+        const errorData = await response.json();
+        console.error("Error:", errorData);
+        alert("Failed to create bill.");
       }
     } catch (error) {
-      console.error("Error logging in:", error);
-      alert("An error occurred while logging in.");
+      console.error("Error creating bill:", error);
+      alert("An error occurred while creating the bill.");
     }
   };
 
@@ -71,7 +77,7 @@ const MakeBills = () => {
               />
             </Form.Group>
             <Form.Group controlId="setPayerName" className="mb-3">
-              <Form.Label>Eneter Invoicee Name</Form.Label>
+              <Form.Label>Enter Invoicee Name</Form.Label>
               <Form.Control
                 type="text"
                 placeholder="Enter Invoicee Name"
@@ -93,7 +99,7 @@ const MakeBills = () => {
             <Form.Group controlId="setPayerEmail" className="mb-3">
               <Form.Label>Invoicee Email</Form.Label>
               <Form.Control
-                type="text"
+                type="email"
                 placeholder="Enter Invoicee Email"
                 value={payerEmail}
                 onChange={(e) => setPayerEmail(e.target.value)}
@@ -103,7 +109,7 @@ const MakeBills = () => {
             <Form.Group controlId="setPayerPhone" className="mb-3">
               <Form.Label>Invoicee Phone Number</Form.Label>
               <Form.Control
-                type="text"
+                type="tel"
                 placeholder="Enter Invoicee Phone Number"
                 value={payerPhone}
                 onChange={(e) => setPayerPhone(e.target.value)}
