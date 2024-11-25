@@ -43,7 +43,7 @@ class CreateInternalBillRequest(CreateBillRequest):
 async def make_bill(
     specification: CreateInternalBillRequest,
     authorization: Annotated[str | None, Header()] = None,
-) -> dict[str, str]:
+) -> models.InternalBill:
     """Creates an internal bill.
 
     Args:
@@ -55,7 +55,7 @@ async def make_bill(
         HTTPException: 401, 403; if the user does not have permission to perform this action.
 
     Returns:
-        dict[str, str]: A confirmation message saying that the bill was created.
+        models.InternalBill: The created bill.
     """
     auth.get(authorization).is_chapter_admin(specification.chapter_id).raise_for_http()
 
@@ -63,15 +63,19 @@ async def make_bill(
 
         bill_UUID = uuid.uuid4()
 
-        query = db.tb.bill.insert().values(
-            chapter_id=specification.chapter_id,
-            bill_id=bill_UUID,
-            amount=specification.amount,
-            desc=specification.desc,
-            due_date=specification.due_date,
-            is_external=False,
+        query = (
+            db.tb.bill.insert()
+            .returning(*db.tb.bill.c)
+            .values(
+                chapter_id=specification.chapter_id,
+                bill_id=bill_UUID,
+                amount=specification.amount,
+                desc=specification.desc,
+                due_date=specification.due_date,
+                is_external=False,
+            )
         )
-        conn.execute(query)
+        result = conn.execute(query).one()
 
         query = db.tb.internal_bill.insert().values(
             bill_id=bill_UUID, member_email=specification.member_email
@@ -80,7 +84,7 @@ async def make_bill(
 
         conn.commit()
 
-    return {"message": "Bill created successfully"}
+    return dict(**result._mapping, member_email=specification.member_email)
 
 
 class UpdateBillRequest(BaseModel):
@@ -136,7 +140,7 @@ async def make_bill(
         HTTPException: 401, 403; if the user does not have permission to perform this action.
 
     Returns:
-        dict[str, str]: A confirmation message saying that the bill was created.
+        models.ExternalBill: The created bill.
     """
     auth.get(authorization).is_chapter_admin(specification.chapter_id).raise_for_http()
 
@@ -144,13 +148,17 @@ async def make_bill(
 
         bill_UUID = uuid.uuid4()
 
-        query = db.tb.bill.insert().values(
-            chapter_id=specification.chapter_id,
-            bill_id=bill_UUID,
-            amount=specification.amount,
-            desc=specification.desc,
-            due_date=specification.due_date,
-            is_external=True,
+        query = (
+            db.tb.bill.insert()
+            .returning(*db.tb.bill.c)
+            .values(
+                chapter_id=specification.chapter_id,
+                bill_id=bill_UUID,
+                amount=specification.amount,
+                desc=specification.desc,
+                due_date=specification.due_date,
+                is_external=True,
+            )
         )
         conn.execute(query)
 
