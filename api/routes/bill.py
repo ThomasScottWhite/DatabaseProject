@@ -15,8 +15,7 @@ from api import auth, db, models
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="bill", tags=["bill"])
-# router = APIRouter(prefix="/bills")
+router = APIRouter(prefix="/bill", tags=["bill"])
 
 
 class MakeBillRequest(BaseModel):
