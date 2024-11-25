@@ -39,6 +39,35 @@ class CreateInternalBillRequest(CreateBillRequest):
     member_email: str
 
 
+class UpdateBillRequest(BaseModel):
+    amount: float = None
+    amount_paid: float = None
+    desc: str = None
+    due_date: datetime.datetime = None
+    issue_date: datetime.date = None
+
+
+@router.patch("/id/{bill_id}", status_code=status.HTTP_204_NO_CONTENT)
+def update_internal_bill(
+    bill_id: uuid.UUID,
+    updates: UpdateBillRequest,
+    authorization: Annotated[str | None, Header()] = None,
+):
+    auth_checker = auth.get(authorization)
+    auth_checker.logged_in().raise_for_http()
+
+    with db.begin() as conn:
+        chapter_id = _get_chapter_id_from_bill_id(conn, bill_id)
+        auth_checker.is_chapter_admin(chapter_id).raise_for_http()
+
+        query = (
+            db.tb.bill.update()
+            .values(**updates.model_dump(exclude_unset=True))
+            .where(db.tb.bill.c.bill_id == str(bill_id))
+        )
+        conn.execute(query)
+
+
 @router.post("/internal", status_code=status.HTTP_201_CREATED)
 async def make_internal_bill(
     specification: CreateInternalBillRequest,
@@ -85,35 +114,6 @@ async def make_internal_bill(
         conn.commit()
 
     return dict(**result._mapping, member_email=specification.member_email)
-
-
-class UpdateBillRequest(BaseModel):
-    amount: float = None
-    amount_paid: float = None
-    desc: str = None
-    due_date: datetime.datetime = None
-    issue_date: datetime.date = None
-
-
-@router.patch("/internal/{bill_id}", status_code=status.HTTP_204_NO_CONTENT)
-def update_internal_bill(
-    bill_id: uuid.UUID,
-    updates: UpdateBillRequest,
-    authorization: Annotated[str | None, Header()] = None,
-):
-    auth_checker = auth.get(authorization)
-    auth_checker.logged_in().raise_for_http()
-
-    with db.begin() as conn:
-        chapter_id = _get_chapter_id_from_bill_id(conn, bill_id)
-        auth_checker.is_chapter_admin(chapter_id).raise_for_http()
-
-        query = (
-            db.tb.bill.update()
-            .values(**updates.model_dump(exclude_unset=True))
-            .where(db.tb.bill.c.bill_id == str(bill_id))
-        )
-        conn.execute(query)
 
 
 class CreateExternalBillRequest(CreateBillRequest):
