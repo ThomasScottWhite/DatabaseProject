@@ -3,13 +3,11 @@ from __future__ import annotations
 import datetime
 import logging
 import uuid
-from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Header, HTTPException, Request, status
-from pydantic import BaseModel
+from fastapi import APIRouter, Header, HTTPException, status
+from pydantic import BaseModel, field_validator
 from sqlalchemy import Connection, select
-from sqlalchemy.dialects.postgresql import UUID
 
 from api import auth, db, models
 
@@ -47,12 +45,12 @@ class UpdateBillRequest(BaseModel):
     issue_date: datetime.date = None
 
 
-@router.patch("/id/{bill_id}", status_code=status.HTTP_204_NO_CONTENT)
-def update_internal_bill(
+@router.patch("/id/{bill_id}")
+def update_bill(
     bill_id: uuid.UUID,
     updates: UpdateBillRequest,
     authorization: Annotated[str | None, Header()] = None,
-):
+) -> models.Bill:
     auth_checker = auth.get(authorization)
     auth_checker.logged_in().raise_for_http()
 
@@ -62,10 +60,80 @@ def update_internal_bill(
 
         query = (
             db.tb.bill.update()
+            .returning(*db.tb.bill.c)
             .values(**updates.model_dump(exclude_unset=True))
             .where(db.tb.bill.c.bill_id == str(bill_id))
         )
+        result = conn.execute(query).one_or_none()
+
+        if result is None:
+            raise HTTPException(status.HTTP_304_NOT_MODIFIED)
+
+    return result
+
+
+@router.delete("/id/{bill_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_bill(
+    bill_id: uuid.UUID,
+    authorization: Annotated[str | None, Header()] = None,
+):
+    auth_checker = auth.get(authorization)
+    auth_checker.logged_in().raise_for_http()
+
+    with db.begin() as conn:
+        chapter_id = _get_chapter_id_from_bill_id(conn, bill_id)
+        auth_checker.is_chapter_admin(chapter_id).raise_for_http()
+
+        query = db.tb.bill.delete().where(db.tb.bill.c.bill_id == str(bill_id))
         conn.execute(query)
+
+
+class PaymentRequest(BaseModel):
+    payment_amount: int
+
+    @field_validator("payment_amount")
+    @classmethod
+    def name_must_contain_space(cls, v: int) -> int:
+        if v < 0:
+            raise ValueError("cannot pay negative amount.")
+        return v
+
+
+@router.post("/pay/{bill_id}")
+def pay_bill(
+    bill_id: uuid.UUID,
+    payment: PaymentRequest,
+    authorization: Annotated[str | None, Header()] = None,
+) -> models.InternalBill:
+    auth_checker = auth.get(authorization)
+    auth_checker.logged_in().raise_for_http()
+
+    with db.begin() as conn:
+        email_query = select(db.tb.internal_bill.c.member_email).where(
+            db.tb.internal_bill.c.bill_id == str(bill_id)
+        )
+        email_result = conn.execute(email_query).one_or_none()
+
+        if email_query is None:
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND,
+                "Specified bill does not exist or is not an internal bill.",
+            )
+
+        auth_checker.is_user(email_result[0]).raise_for_http()
+
+        update_query = (
+            db.tb.bill.update()
+            .returning(*db.tb.bill.c)
+            .values(amount_paid=db.tb.bill.c.amount_paid + payment.payment_amount)
+            .where(db.tb.bill.c.bill_id == str(bill_id))
+        )
+        result = conn.execute(update_query).one_or_none()
+
+        if result is None:
+            raise HTTPException(status.HTTP_304_NOT_MODIFIED)
+
+    return dict(**result._mapping, member_email=email_result[0])
 
 
 @router.post("/internal", status_code=status.HTTP_201_CREATED)
