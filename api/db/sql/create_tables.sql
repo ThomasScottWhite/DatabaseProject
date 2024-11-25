@@ -96,9 +96,9 @@ CREATE TABLE Internal_Bill (
 
 -- Create Payment_Info table
 CREATE TABLE Payment_Info (
-    Member_Email    text,
+    Member_Email    text        NOT NULL,
     Payment_ID      serial,
-    Nickname        text    NOT NULL,
+    Nickname        text,
 
     FOREIGN KEY (Member_Email) REFERENCES Member (Email) ON DELETE CASCADE,
     PRIMARY KEY (Payment_ID)
@@ -106,7 +106,7 @@ CREATE TABLE Payment_Info (
 
 -- Create BankAccount table
 CREATE TABLE Bank_Account (
-    Payment_ID      int,
+    Payment_ID      int         NOT NULL,
     Account_Num     int,
     Routing_Num     int,
 
@@ -116,7 +116,7 @@ CREATE TABLE Bank_Account (
 
 -- Create Card table
 CREATE TABLE Card (
-    Payment_ID      int,
+    Payment_ID      int         NOT NULL,
     Card_Num        int,
     Security_Code   int         NOT NULL,
     Exp_Date        varchar     NOT NULL,

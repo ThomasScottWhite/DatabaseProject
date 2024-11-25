@@ -52,9 +52,9 @@ INSERT INTO Internal_Bill (Bill_ID, Member_Email)
     VALUES ('2990e7d7-281f-4716-9609-6848ebcdecaf', 'dog@dogmail.com');
 
 --Make payment ID serial?
-INSERT INTO Payment_Info (Member_Email, Payment_ID, Nickname)
-    VALUES ('dog@dogmail.com', 1, 'Dogpal'),
-    ('cat@catmail.com', 2, 'catpal');
+INSERT INTO Payment_Info (Member_Email, Nickname)
+    VALUES ('dog@dogmail.com', 'Dogpal'),
+    ('cat@catmail.com', 'catpal');
 
 INSERT INTO Bank_Account (Payment_ID, Account_Num, Routing_Num)
     VALUES (1, 123456789, 987654321);    
