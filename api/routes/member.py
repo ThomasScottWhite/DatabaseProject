@@ -296,7 +296,7 @@ def get_member_payment_info(
 
     Args:
         member_email (str): The member's email.
-                authorization (Annotated[str  |  None, Header, optional): The auth token used to authorize this action.
+        authorization (Annotated[str  |  None, Header, optional): The auth token used to authorize this action.
             Defaults to None.
 
     Raises:
