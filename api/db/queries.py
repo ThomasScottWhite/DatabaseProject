@@ -21,11 +21,11 @@ def create_member(
     info_dict = specification.model_dump(exclude_unset=True)
 
     if specification.is_chapter_admin is None:
-        info_dict.pop("is_chapter_admin")
+        info_dict.pop("is_chapter_admin", None)
     else:
         auth_checker.is_chapter_admin(specification.chapter_id).raise_for_http()
 
-    member_insert = tb.member.insert().returning(*tb.member.c).values(dict(**info_dict))
+    member_insert = tb.member.insert().returning(*tb.member.c).values(info_dict)
     return conn.execute(member_insert).one()
 
 
