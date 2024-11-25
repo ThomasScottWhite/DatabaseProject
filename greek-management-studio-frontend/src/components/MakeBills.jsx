@@ -6,13 +6,12 @@ const MakeBills = () => {
   const [dueDate, setDueDate] = useState(
     new Date().toISOString().split("T")[0]
   );
-  const [desc, setDesc] = useState(""); // Description (Bill Name)
+  const [desc, setDesc] = useState("");
   const [amount, setAmount] = useState("");
   const [memberEmail, setMemberEmail] = useState("");
-  const [invoiceOptions, setInvoiceOptions] = useState([]); // For dropdown options
+  const [invoiceOptions, setInvoiceOptions] = useState([]);
   const user = useUser();
 
-  // Fetch the list of members
   useEffect(() => {
     const fetchMembers = async () => {
       try {
@@ -48,10 +47,10 @@ const MakeBills = () => {
 
     const payload = {
       chapter_id: user.user.chapter_id,
-      amount: parseFloat(amount), // Ensure amount is a number
-      desc, // Use the description field
+      amount: parseFloat(amount),
+      desc,
       due_date: dueDate,
-      member_email: memberEmail, // Selected member's email
+      member_email: memberEmail,
     };
 
     try {

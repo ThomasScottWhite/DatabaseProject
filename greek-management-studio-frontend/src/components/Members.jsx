@@ -20,7 +20,7 @@ const Members = () => {
       const data = await response.json();
       console.log(data);
       setMembers(data);
-      setEditableMembers(data); // Initialize editableMembers
+      setEditableMembers(data);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -30,7 +30,6 @@ const Members = () => {
     try {
       const updatedMemberCopy = { ...updatedMember };
       delete updatedMemberCopy.chapter_id;
-      // delete updatedMemberCopy.is_chapter_admin;
       delete updatedMemberCopy.email;
 
       const response = await user.patch_with_headers(
@@ -42,7 +41,7 @@ const Members = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      await Refresh(); // Refresh data after update
+      await Refresh();
     } catch (error) {
       console.error("Error updating member:", error);
     }

@@ -4,13 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/user_context";
 
 const ViewBills = () => {
-  const [bills, setBills] = useState(null); // Initialize with null to indicate loading state
+  const [bills, setBills] = useState(null);
   const user = useUser();
   const navigate = useNavigate();
 
   const Refresh = async () => {
     try {
-      const memberEmail = user.user.email; // Get the member email from user context
+      const memberEmail = user.user.email;
       const response = await user.get_with_headers(
         `/api/member/${memberEmail}/bills`
       );
@@ -20,7 +20,7 @@ const ViewBills = () => {
       }
 
       const data = await response.json();
-      setBills(data); // Directly set the fetched data
+      setBills(data);
     } catch (error) {
       console.error("Error fetching data:", error);
     }

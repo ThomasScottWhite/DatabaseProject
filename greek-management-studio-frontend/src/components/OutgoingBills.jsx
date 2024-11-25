@@ -4,16 +4,16 @@ import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/user_context";
 
 const ViewBills = () => {
-  const [bills, setBills] = useState(null); // Initialize with null to indicate loading state
-  const [selectedBill, setSelectedBill] = useState(null); // Bill to edit
-  const [showEditModal, setShowEditModal] = useState(false); // Modal visibility
+  const [bills, setBills] = useState(null);
+  const [selectedBill, setSelectedBill] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [editData, setEditData] = useState({});
   const user = useUser();
   const navigate = useNavigate();
 
   const Refresh = async () => {
     try {
-      const memberEmail = user.user.email; // Get the member email from user context
+      const memberEmail = user.user.email;
       const response = await user.get_with_headers(
         `/api/member/${memberEmail}/bills`
       );
@@ -39,8 +39,8 @@ const ViewBills = () => {
 
   const handleEdit = (bill) => {
     setSelectedBill(bill);
-    setEditData(bill); // Initialize with current bill data
-    setShowEditModal(true); // Show the modal
+    setEditData(bill);
+    setShowEditModal(true);
   };
 
   const handleSaveEdit = async () => {
