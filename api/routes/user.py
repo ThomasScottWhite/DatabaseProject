@@ -32,7 +32,7 @@ class LoginRequest(User):
 
 class LoginResponse(BaseModel):
     message: str
-    organization_id: int | None
+    chapter_id: int | None
     email: str
     auth_token: str
     is_chapter_admin: bool
@@ -65,7 +65,7 @@ def login(req: LoginRequest) -> LoginResponse:
 
     return LoginResponse(
         message="Login successful!",
-        organization_id=authorization.chapter,
+        chapter_id=authorization.chapter,
         email=authorization.email,
         auth_token=authorization.token,
         is_chapter_admin=authorization.chapter_admin,
