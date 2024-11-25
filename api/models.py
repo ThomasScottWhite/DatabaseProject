@@ -76,3 +76,21 @@ class OrganizationWithChapters(Organization):
 
 class SchoolWithChapters(School):
     chapters: list[Chapter]
+
+
+class PaymentInfo(BaseModel):
+    member_email: str
+    payment_id: int
+    nickname: str | None
+
+
+class BankAccount(PaymentInfo):
+    account_num: int
+    routing_num: int
+
+
+class Card(PaymentInfo):
+    card_num: int
+    security_code: int
+    exp_date: str
+    name: str
