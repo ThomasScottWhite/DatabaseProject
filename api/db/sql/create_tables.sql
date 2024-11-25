@@ -63,10 +63,10 @@ CREATE TABLE Bill (
     Chapter_ID      bigint,
     Bill_ID         UUID,
     Amount          float           NOT NULL,
-    Amount_Paid     float           NOT NULL,
-    "desc"          text            NOT NULL,
+    Amount_Paid     float           NOT NULL DEFAULT 0,
+    "desc"          text            NOT NULL DEFAULT '',
     Due_Date       	timestamp       NOT NULL,
-    Issue_Date      date            NOT NULL,
+    Issue_Date      date            NOT NULL DEFAULT CURRENT_DATE,
     Is_External     bool            NOT NULL,
 
     FOREIGN KEY (Chapter_ID) REFERENCES Chapter (ID) ON DELETE CASCADE,
