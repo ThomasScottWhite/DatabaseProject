@@ -40,7 +40,7 @@ class CreateInternalBillRequest(CreateBillRequest):
 
 
 @router.post("/internal", status_code=status.HTTP_201_CREATED)
-async def make_bill(
+async def make_internal_bill(
     specification: CreateInternalBillRequest,
     authorization: Annotated[str | None, Header()] = None,
 ) -> models.InternalBill:
@@ -121,14 +121,14 @@ class CreateExternalBillRequest(CreateBillRequest):
     payor_name: str
     p_billing_address: str
     p_email: str
-    p_phone_nume: str
+    p_phone_num: str
 
 
 @router.post("/external", status_code=status.HTTP_201_CREATED)
-async def make_bill(
+async def make_external_bill(
     specification: CreateExternalBillRequest,
     authorization: Annotated[str | None, Header()] = None,
-) -> dict[str, str]:
+) -> models.ExternalBill:
     """Creates a new external bill.
 
     Args:
@@ -160,18 +160,22 @@ async def make_bill(
                 is_external=True,
             )
         )
-        conn.execute(query)
+        bill_result = conn.execute(query).one()
 
-        query = db.tb.external_bill.insert().values(
-            bill_id=bill_UUID,
-            chapter_contact=specification.chapter_contact,
-            payor_name=specification.payor_name,
-            p_billing_address=specification.p_bill_address,
-            p_email=specification.p_email,
-            p_phone_num=specification.p_phone,
+        query = (
+            db.tb.external_bill.insert()
+            .returning(*[c for c in db.tb.external_bill.c if c.name != "bill_id"])
+            .values(
+                bill_id=bill_UUID,
+                chapter_contact=specification.chapter_contact,
+                payor_name=specification.payor_name,
+                p_billing_address=specification.p_billing_address,
+                p_email=specification.p_email,
+                p_phone_num=specification.p_phone_num,
+            )
         )
-        conn.execute(query)
+        external_result = conn.execute(query).one()
 
         conn.commit()
 
-    return {"message": "Bill created successfully"}
+    return dict(**bill_result._mapping, **external_result._mapping)
