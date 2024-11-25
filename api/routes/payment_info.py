@@ -31,6 +31,20 @@ class CreateCardRequest(CreatePaymentInfoRequest):
     name: str
 
 
+def _get_member_email_from_payment_id(conn: Connection, payment_id: int) -> str:
+    query = select(db.tb.payment_info.c.member_email).where(
+        db.tb.payment_info.c.payment_id == payment_id
+    )
+    result = conn.execute(query).one_or_none()
+
+    if result is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, "Specified payment option does not exist."
+        )
+
+    return result[0]
+
+
 @router.post("")
 def create_payment_info(
     specification: CreateBankAccountRequest | CreateCardRequest,
@@ -76,3 +90,18 @@ def create_payment_info(
 
 
 # TODO: update, delete
+@router.delete("/{payment_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_payment_info(
+    payment_id: int, authorization: Annotated[str | None, Header()] = None
+):
+    auth_checker = auth.get(authorization)
+    auth_checker.logged_in().raise_for_http()
+
+    with db.begin() as conn:
+        member_email = _get_member_email_from_payment_id(conn, payment_id)
+        auth_checker.is_user(member_email).raise_for_http()
+
+        query = db.tb.payment_info.delete().where(
+            db.tb.payment_info.c.payment_id == payment_id
+        )
+        conn.execute(query)
