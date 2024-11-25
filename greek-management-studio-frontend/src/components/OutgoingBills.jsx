@@ -33,10 +33,6 @@ const ViewBills = () => {
     Refresh();
   }, []);
 
-  const handlePay = (bill) => {
-    navigate(`/payment/${bill.bill_id}/${bill.amount}/${bill.desc}`);
-  };
-
   const handleEdit = (bill) => {
     setSelectedBill(bill);
     setEditData(bill);
@@ -103,11 +99,6 @@ const ViewBills = () => {
               <td>{bill.is_external ? "External" : "Internal"}</td>
               <td>{bill.amount_paid > 0 ? "Yes" : "No"}</td>
               <td>
-                {bill.amount_paid === 0 && (
-                  <Button variant="success" onClick={() => handlePay(bill)}>
-                    Pay
-                  </Button>
-                )}
                 <Button variant="warning" onClick={() => handleEdit(bill)}>
                   Edit
                 </Button>
