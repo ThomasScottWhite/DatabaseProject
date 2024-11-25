@@ -264,3 +264,42 @@ def get_chapter_members(
         result = _get_chapter_members(conn, chapter_id)
 
     return result
+
+
+@router.get("/{chapter_id}/bills")
+def get_chapter_members(
+    chapter_id: int, authorization: Annotated[str | None, Header()] = None
+) -> list[models.InternalBill | models.ExternalBill]:
+    """Returns a list of all outgoing bills made by the specified chapter.
+
+    Args:
+        chapter_id (int): The chatper from which to fetch bills.
+        authorization (Annotated[str  |  None, Header, optional): The auth token used to authorize this action.
+            Defaults to None.
+
+    Raises:
+        HTTPException: 401, 403; if the user does not have permission to perform this action.
+    """
+    auth.get(authorization).is_chapter_admin(chapter_id).raise_for_http()
+
+    with db.get_connection() as conn:
+        internal_query = (
+            select(*db.tb.bill.c, db.tb.internal_bill.c.member_email)
+            .select_from(db.tb.bill)
+            .join(db.tb.internal_bill)
+            .where(db.tb.bill.c.chapter_id == chapter_id)
+        )
+        external_query = (
+            select(
+                *db.tb.bill.c,
+                *[c for c in db.tb.external_bill.c if c.name != "bill_id"],
+            )
+            .select_from(db.tb.bill)
+            .join(db.tb.external_bill)
+            .where(db.tb.bill.c.chapter_id == chapter_id)
+        )
+
+        internal_bills = conn.execute(internal_query).all()
+        external_bills = conn.execute(external_query).all()
+
+    return [*internal_bills, *external_bills]
