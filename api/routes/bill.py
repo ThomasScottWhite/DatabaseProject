@@ -43,16 +43,14 @@ async def make_bill(info: MakeBillRequest, raw_request: Request):
     with db.get_connection() as conn:
 
         bill_UUID = uuid.uuid4()
-        #bill_UUID = str(UUID(as_uuid=True))
 
-        #db.tb.bill.insert().values(chapter_id=info.invoicee_id, bill_id=bill_UUID, amount=info.amount, amount_paid=0, desc=info.bill_name, due_date=info.date, issue_date=date.today(), is_external=0)
         query = db.tb.bill.insert().values(chapter_id=info.invoicee_id, bill_id=bill_UUID, amount=info.amount, amount_paid=0, desc=info.bill_name, due_date=info.date, issue_date=date.today(), is_external=0)
-
         conn.execute(query)
-        #(tempBillID,) = conn.execute(query).one()
 
         query = db.tb.internal_bill.insert().values(bill_id=bill_UUID, member_email=info.invoicee_name)
         conn.execute(query)
+
+        conn.commit()
 
     # make the bill
 
@@ -68,6 +66,9 @@ class MakeExternalBillRequest(BaseModel):
     due_date: str
     amount: float
 
+    invoicee_id: str
+    date: str
+
 
 @router.post("/make-external-bill")
 async def make_bill(request: MakeExternalBillRequest, raw_request: Request):
@@ -77,22 +78,15 @@ async def make_bill(request: MakeExternalBillRequest, raw_request: Request):
 
     with db.get_connection() as conn:
 
-        query = db.tb.bill.insert().values(chapter_id=request.invoicee_id, 
-                                        amount=request.amount, 
-                                        amount_paid=0, 
-                                        desc=request.bill_name, 
-                                        due_date=request.due_date, 
-                                        issue_date=date.today(), 
-                                        is_external=0)
+        bill_UUID = uuid.uuid4()
 
-        (tempBillID,) = conn.execute(query).one()
+        query = db.tb.bill.insert().values(chapter_id=request.invoicee_id, bill_id=bill_UUID, amount=request.amount, amount_paid=0, desc=request.bill_name, due_date=request.date, issue_date=date.today(), is_external=0)
+        conn.execute(query)
 
-        query = db.tb.external_bill.insert().values(bill_id=tempBillID[0], 
-                                                    chapter_contact=request.chapter_contact, 
-                                                    payor_name=request.payer_name, 
-                                                    p_billing_address=request.bill_address, 
-                                                    p_mail=request.payer_email, 
-                                                    p_phone_num=request.payer_phone)
+        query = db.tb.external_bill.insert().values(bill_id=bill_UUID, chapter_contact=request.chapter_contact, payor_name=request.payer_name, p_billing_address=request.payer_bill_address, p_email=request.payer_email, p_phone_num=request.payer_phone)
+        conn.execute(query)
+
+        conn.commit()
 
     return {"message": "Bill created successfully"}
 
