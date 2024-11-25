@@ -1,4 +1,5 @@
 import datetime
+import uuid
 
 from pydantic import BaseModel
 
@@ -94,3 +95,26 @@ class Card(PaymentInfo):
     security_code: int
     exp_date: str
     name: str
+
+
+class Bill(BaseModel):
+    chapter_id: int
+    bill_id: uuid.UUID
+    amount: float
+    amount_paid: float
+    desc: str
+    due_date: datetime.datetime
+    issue_date: datetime.date
+    is_external: bool
+
+
+class ExternalBill(Bill):
+    chapter_contact: str
+    payor_name: str
+    p_billing_address: str
+    p_email: str
+    p_phone_num: str
+
+
+class InternalBill(Bill):
+    member_email: str
