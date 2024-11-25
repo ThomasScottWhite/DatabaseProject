@@ -10,4 +10,4 @@ COPY ./db/sql/*.sql /docker-entrypoint-initdb.d/
 
 # BUILD AND RUN CONTAINER:
 # podman build --tag dbproj -f db.Containerfile .
-# podman run -p 5432:5432 dbproj
+# podman run -p 6789:5432 dbproj
