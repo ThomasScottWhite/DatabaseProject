@@ -28,22 +28,26 @@ def _get_chapter_id_from_bill_id(conn: Connection, bill_id: str | uuid.UUID) -> 
     return result[0]
 
 
-class MakeBillRequest(BaseModel):
-    invoicee_name: str
-    invoicee_id: int
-    bill_name: str
+class CreateBillRequest(BaseModel):
+    chapter_id: int
     amount: float
-    date: datetime.date
+    desc: str = ""
+    due_date: datetime.datetime
 
 
-@router.post("/internal")
+class CreateInternalBillRequest(CreateBillRequest):
+    member_email: str
+
+
+@router.post("/internal", status_code=status.HTTP_201_CREATED)
 async def make_bill(
-    info: MakeBillRequest, authorization: Annotated[str | None, Header()] = None
+    specification: CreateInternalBillRequest,
+    authorization: Annotated[str | None, Header()] = None,
 ) -> dict[str, str]:
     """Creates an internal bill.
 
     Args:
-        info (MakeBillRequest): The fields of the new bill.
+        specification (CreateInternalBillRequest): The fields of the new bill.
         authorization (Annotated[str  |  None, Header, optional): The auth token used to authorize this action.
             Defaults to None.
 
@@ -53,26 +57,24 @@ async def make_bill(
     Returns:
         dict[str, str]: A confirmation message saying that the bill was created.
     """
-    auth.get(authorization).is_chapter_admin(info.invoicee_id).raise_for_http()
+    auth.get(authorization).is_chapter_admin(specification.chapter_id).raise_for_http()
 
     with db.get_connection() as conn:
 
         bill_UUID = uuid.uuid4()
 
         query = db.tb.bill.insert().values(
-            chapter_id=info.invoicee_id,
+            chapter_id=specification.chapter_id,
             bill_id=bill_UUID,
-            amount=info.amount,
-            amount_paid=0,
-            desc=info.bill_name,
-            due_date=info.date,
-            issue_date=date.today(),
-            is_external=0,
+            amount=specification.amount,
+            desc=specification.desc,
+            due_date=specification.due_date,
+            is_external=False,
         )
         conn.execute(query)
 
         query = db.tb.internal_bill.insert().values(
-            bill_id=bill_UUID, member_email=info.invoicee_name
+            bill_id=bill_UUID, member_email=specification.member_email
         )
         conn.execute(query)
 
@@ -110,29 +112,23 @@ def update_internal_bill(
         conn.execute(query)
 
 
-class MakeExternalBillRequest(BaseModel):
-    bill_name: str
+class CreateExternalBillRequest(CreateBillRequest):
     chapter_contact: str
-    payer_name: str
-    payer_bill_address: str
-    payer_email: str
-    payer_phone: str
-    due_date: str
-    amount: float
-
-    invoicee_id: int
-    date: str
+    payor_name: str
+    p_billing_address: str
+    p_email: str
+    p_phone_nume: str
 
 
-@router.post("/external")
+@router.post("/external", status_code=status.HTTP_201_CREATED)
 async def make_bill(
-    request: MakeExternalBillRequest,
+    specification: CreateExternalBillRequest,
     authorization: Annotated[str | None, Header()] = None,
 ) -> dict[str, str]:
     """Creates a new external bill.
 
     Args:
-        request (MakeExternalBillRequest): The fields of the new bill.
+        specification (CreateExternalBillRequest): The fields of the new bill.
         authorization (Annotated[str  |  None, Header, optional): The auth token used to authorize this action.
             Defaults to None.
 
@@ -142,31 +138,29 @@ async def make_bill(
     Returns:
         dict[str, str]: A confirmation message saying that the bill was created.
     """
-    auth.get(authorization).is_chapter_admin(request.invoicee_id).raise_for_http()
+    auth.get(authorization).is_chapter_admin(specification.chapter_id).raise_for_http()
 
     with db.get_connection() as conn:
 
         bill_UUID = uuid.uuid4()
 
         query = db.tb.bill.insert().values(
-            chapter_id=request.invoicee_id,
+            chapter_id=specification.chapter_id,
             bill_id=bill_UUID,
-            amount=request.amount,
-            amount_paid=0,
-            desc=request.bill_name,
-            due_date=request.date,
-            issue_date=date.today(),
-            is_external=0,
+            amount=specification.amount,
+            desc=specification.desc,
+            due_date=specification.due_date,
+            is_external=True,
         )
         conn.execute(query)
 
         query = db.tb.external_bill.insert().values(
             bill_id=bill_UUID,
-            chapter_contact=request.chapter_contact,
-            payor_name=request.payer_name,
-            p_billing_address=request.payer_bill_address,
-            p_email=request.payer_email,
-            p_phone_num=request.payer_phone,
+            chapter_contact=specification.chapter_contact,
+            payor_name=specification.payor_name,
+            p_billing_address=specification.p_bill_address,
+            p_email=specification.p_email,
+            p_phone_num=specification.p_phone,
         )
         conn.execute(query)
 
