@@ -12,42 +12,46 @@ const Login = () => {
 
   const login_request = async (e) => {
     e.preventDefault();
-
+  
     const payload = {
-      username: email,
+      email: email,
       password: password,
     };
-
+  
     try {
-      const response = await fetch("/api/login", {
+      const response = await fetch("/api/user/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
       });
-
+  
       if (response.ok) {
         const data = await response.json();
-        // Use user context to update login state
-        console.log(data);
+        console.log("Login response data:", data);
+  
+        // Call login and wait for the state to update
         user.login(
-          data.organization_id,
+          data.chapter_id,
           data.auth_token,
           data.email,
-          data.is_admin
+          data.is_chapter_admin,
+          () => {
+            // Navigate after the state is updated
+            console.log("State updated. Navigating...");
+            navigate("/mainpage");
+          }
         );
-        navigate("/mainpage");
       } else {
-        // Handle login failure (example: setting test data)
-        user.login("test@gmail.com", "1", "1");
-        navigate("/mainpage");
+        console.error("Login failed. Response not OK.");
+        alert("Invalid credentials. Please try again.");
       }
     } catch (error) {
-      console.error("Error logging in:", error);
-      alert("An error occurred while logging in.");
+      console.error("Error during login:", error);
+      alert("An error occurred while logging in. Please try again.");
     }
-  };
+  };  
 
   return (
     <Container className="d-flex justify-content-center align-items-center min-vh-100">

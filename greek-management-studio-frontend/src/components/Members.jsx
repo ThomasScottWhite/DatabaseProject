@@ -10,15 +10,17 @@ const Members = () => {
 
   const Refresh = async () => {
     try {
-      const response = await user.get_with_headers("/api/homepage");
-
+      const response = await user.get_with_headers(
+        "/api/chapter/" + user.user.chapter_id + "/members"
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      setMembers(data.members);
-      setEditableMembers(data.members); // Initialize editableMembers
+      console.log(data);
+      setMembers(data);
+      setEditableMembers(data); // Initialize editableMembers
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -26,9 +28,14 @@ const Members = () => {
 
   const EditUser = async (updatedMember) => {
     try {
-      const response = await user.post_with_headers(
-        `/api/update_member/${updatedMember.id}`,
-        updatedMember
+      const updatedMemberCopy = { ...updatedMember };
+      delete updatedMemberCopy.chapter_id;
+      // delete updatedMemberCopy.is_chapter_admin;
+      delete updatedMemberCopy.email;
+
+      const response = await user.patch_with_headers(
+        `/api/member/${updatedMember.email}`,
+        updatedMemberCopy
       );
 
       if (!response.ok) {
@@ -41,16 +48,18 @@ const Members = () => {
     }
   };
 
-  const handleInputChange = (id, field, value) => {
+  const handleInputChange = (member_id, field, value) => {
     setEditableMembers((prev) =>
       prev.map((member) =>
-        member.id === id ? { ...member, [field]: value } : member
+        member.member_id === member_id ? { ...member, [field]: value } : member
       )
     );
   };
 
-  const handleSubmit = (id) => {
-    const updatedMember = editableMembers.find((member) => member.id === id);
+  const handleSubmit = (member_id) => {
+    const updatedMember = editableMembers.find(
+      (member) => member.member_id === member_id
+    );
     if (updatedMember) {
       EditUser(updatedMember);
     }
@@ -69,56 +78,98 @@ const Members = () => {
       <h2 className="text-center mb-4">Organization Members</h2>
       <Row>
         {editableMembers.map((member) => (
-          <Col xs={12} md={6} lg={4} key={member.id} className="mb-4">
+          <Col xs={12} md={6} lg={4} key={member.member_id} className="mb-4">
             <Card>
               <Card.Body>
                 {editMode ? (
                   <>
                     <Form.Group className="mb-2">
-                      <Form.Label>Name</Form.Label>
+                      <Form.Label>First Name</Form.Label>
                       <Form.Control
                         type="text"
-                        value={member.name}
+                        value={member.fname}
                         onChange={(e) =>
-                          handleInputChange(member.id, "name", e.target.value)
+                          handleInputChange(
+                            member.member_id,
+                            "fname",
+                            e.target.value
+                          )
                         }
                       />
                     </Form.Group>
                     <Form.Group className="mb-2">
-                      <Form.Label>Role</Form.Label>
+                      <Form.Label>Last Name</Form.Label>
                       <Form.Control
                         type="text"
-                        value={member.role}
+                        value={member.lname}
                         onChange={(e) =>
-                          handleInputChange(member.id, "role", e.target.value)
+                          handleInputChange(
+                            member.member_id,
+                            "lname",
+                            e.target.value
+                          )
                         }
                       />
                     </Form.Group>
                     <Form.Group className="mb-2">
-                      <Form.Label>Email</Form.Label>
+                      <Form.Label>Member Status</Form.Label>
                       <Form.Control
-                        type="email"
-                        value={member.email}
+                        type="text"
+                        value={member.member_status}
                         onChange={(e) =>
-                          handleInputChange(member.id, "email", e.target.value)
+                          handleInputChange(
+                            member.member_id,
+                            "member_status",
+                            e.target.value
+                          )
                         }
                       />
                     </Form.Group>
+                    <Form.Group className="mb-2">
+                      <Form.Label>Phone Number</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={member.phone_num}
+                        onChange={(e) =>
+                          handleInputChange(
+                            member.member_id,
+                            "phone_num",
+                            e.target.value
+                          )
+                        }
+                      />
+                    </Form.Group>
+                    {user.user.is_admin && (
+                      <Form.Group className="mb-2">
+                        <Form.Check
+                          type="checkbox"
+                          label="Is Chapter Admin"
+                          checked={member.is_chapter_admin}
+                          onChange={(e) =>
+                            handleInputChange(
+                              member.member_id,
+                              "is_chapter_admin",
+                              e.target.checked
+                            )
+                          }
+                        />
+                      </Form.Group>
+                    )}
                     <Button
                       variant="success"
-                      onClick={() => handleSubmit(member.id)}
+                      onClick={() => handleSubmit(member.member_id)}
                     >
                       Submit
                     </Button>
                   </>
                 ) : (
                   <>
-                    <Card.Title>{member.name}</Card.Title>
+                    <Card.Title>{member.fname + " " + member.lname}</Card.Title>
                     <Card.Subtitle className="mb-2 text-muted">
-                      {member.role}
+                      {member.member_status}
                     </Card.Subtitle>
                     <Card.Text>Email: {member.email}</Card.Text>
-                    <Button variant="primary">View Profile</Button>
+                    <Card.Text>Phone Number: {member.phone_num}</Card.Text>
                   </>
                 )}
               </Card.Body>

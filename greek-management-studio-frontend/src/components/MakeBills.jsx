@@ -22,7 +22,7 @@ const MakeBills = () => {
     };
 
     try {
-      const response = await user.post_with_headers("/api/make-bill", payload);
+      const response = await user.post_with_headers("/api/bills/internal", payload);
       if (response.ok) {
         alert("Bill Made");
       }
