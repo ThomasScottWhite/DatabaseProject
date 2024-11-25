@@ -1,5 +1,5 @@
 import sys
-from typing import Any, Callable, ParamSpec, TypeVar
+from typing import Callable, ParamSpec, TypeVar
 
 _T = TypeVar("_T")
 _P = ParamSpec("_P")

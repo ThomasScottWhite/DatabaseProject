@@ -1,7 +1,6 @@
 import datetime
-from typing import Type
 
-from pydantic import BaseModel, Field, create_model
+from pydantic import BaseModel
 
 
 class HasEmail(BaseModel):
