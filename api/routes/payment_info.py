@@ -75,39 +75,4 @@ def create_payment_info(
     )
 
 
-class MemberPaymentInfos(BaseModel):
-    cards: list[models.Card] = []
-    bank_accounts: list[models.BankAccount] = []
-
-
-@router.get("/{member_email}")
-def get_member_payment_info(
-    member_email: str, authorization: Annotated[str | None, Header()] = None
-) -> MemberPaymentInfos:
-    auth.get(authorization).is_user(member_email).raise_for_http()
-
-    with db.get_connection() as conn:
-        payment_info = db.tb.payment_info.c
-
-        bank_query = (
-            select(
-                payment_info.member_email, payment_info.nickname, *db.tb.bank_account.c
-            )
-            .select_from(db.tb.payment_info)
-            .join(db.tb.bank_account)
-            .where(payment_info.member_email == member_email)
-        )
-        card_query = (
-            select(payment_info.member_email, payment_info.nickname, *db.tb.card.c)
-            .select_from(db.tb.payment_info)
-            .join(db.tb.card)
-            .where(payment_info.member_email == member_email)
-        )
-
-        banks = conn.execute(bank_query).all()
-        cards = conn.execute(card_query).all()
-    print(banks, cards)
-    return dict(bank_accounts=banks, cards=cards)
-
-
 # TODO: update, delete

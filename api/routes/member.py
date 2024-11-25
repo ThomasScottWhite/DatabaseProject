@@ -247,3 +247,82 @@ def update_member(
         raise HTTPException(status.HTTP_304_NOT_MODIFIED, "Nothing was changed.")
 
     return result
+
+
+@router.get("/{member_email}/bills")
+def get_member_bills(
+    member_email: str, authorization: Annotated[str | None, Header()] = None
+) -> list[models.Bill]:
+    """Returns a list of bills billed to the specified member.
+
+    Args:
+        member_email (str): The email of the member for which to fetch bills.
+        authorization (Annotated[str  |  None, Header, optional): The auth token used to authorize this action.
+            Defaults to None.
+
+    Raises:
+        HTTPException: 404; if the specified member does not exist.
+        HTTPException: 401, 403; if the user does not have permission to perform this action.
+    """
+    auth_checker = auth.get(authorization)
+    auth_checker.logged_in().raise_for_http()
+
+    with db.get_connection() as conn:
+        if not auth_checker.is_user(member_email):
+            chapter_id = _get_chapter_id_from_member_email(conn, member_email)
+            auth_checker.is_chapter_admin(chapter_id).raise_for_http()
+
+        query = (
+            select(*db.tb.bill.c)
+            .select_from(db.tb.bill)
+            .join(db.tb.internal_bill)
+            .where(db.tb.internal_bill.c.member_email == member_email)
+        )
+        result = conn.execute(query).all()
+
+    return result
+
+
+class MemberPaymentInfos(BaseModel):
+    cards: list[models.Card] = []
+    bank_accounts: list[models.BankAccount] = []
+
+
+@router.get("/{member_email}/payment_info")
+def get_member_payment_info(
+    member_email: str, authorization: Annotated[str | None, Header()] = None
+) -> MemberPaymentInfos:
+    """Fetches the payment info for a member.
+
+    Args:
+        member_email (str): The member's email.
+                authorization (Annotated[str  |  None, Header, optional): The auth token used to authorize this action.
+            Defaults to None.
+
+    Raises:
+        HTTPException: 401, 403; if the user does not have permission to perform this action.
+    """
+    auth.get(authorization).is_user(member_email).raise_for_http()
+
+    with db.get_connection() as conn:
+        payment_info = db.tb.payment_info.c
+
+        bank_query = (
+            select(
+                payment_info.member_email, payment_info.nickname, *db.tb.bank_account.c
+            )
+            .select_from(db.tb.payment_info)
+            .join(db.tb.bank_account)
+            .where(payment_info.member_email == member_email)
+        )
+        card_query = (
+            select(payment_info.member_email, payment_info.nickname, *db.tb.card.c)
+            .select_from(db.tb.payment_info)
+            .join(db.tb.card)
+            .where(payment_info.member_email == member_email)
+        )
+
+        banks = conn.execute(bank_query).all()
+        cards = conn.execute(card_query).all()
+    print(banks, cards)
+    return dict(bank_accounts=banks, cards=cards)
