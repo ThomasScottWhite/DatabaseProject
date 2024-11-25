@@ -89,11 +89,11 @@ def delete_bill(
 
 
 class PaymentRequest(BaseModel):
-    payment_amount: int
+    payment_amount: float
 
     @field_validator("payment_amount")
     @classmethod
-    def name_must_contain_space(cls, v: int) -> int:
+    def name_must_contain_space(cls, v: float) -> float:
         if v < 0:
             raise ValueError("cannot pay negative amount.")
         return v
