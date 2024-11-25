@@ -175,7 +175,7 @@ class MemberUpdateRequest(BaseModel):
     lname: str = None
     dob: date = None
     member_id: int = None
-    member_status: str = None
+    member_status: str | None = None
     is_chapter_admin: bool = None
     phone_num: str = None
 
