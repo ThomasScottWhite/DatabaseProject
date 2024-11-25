@@ -51,7 +51,7 @@ async def make_bill(info: MakeBillRequest, raw_request: Request):
         conn.execute(query)
         #(tempBillID,) = conn.execute(query).one()
 
-        query = db.tb.internal_bill.insert().values(bill_id=bill_UUID, member_email=info.invoicee_id)
+        query = db.tb.internal_bill.insert().values(bill_id=bill_UUID, member_email=info.invoicee_name)
         conn.execute(query)
 
     # make the bill
