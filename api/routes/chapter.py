@@ -267,7 +267,7 @@ def get_chapter_members(
 
 
 @router.get("/{chapter_id}/bills")
-def get_chapter_members(
+def get_chapter_bills(
     chapter_id: int, authorization: Annotated[str | None, Header()] = None
 ) -> list[models.InternalBill | models.ExternalBill]:
     """Returns a list of all outgoing bills made by the specified chapter.
