@@ -24,7 +24,6 @@ class MakeBillRequest(BaseModel):
     bill_name: str
     amount: float
     date: datetime.date
-    paid: float = 0
 
 
 @router.post("/internal")
@@ -54,7 +53,7 @@ async def make_bill(
             chapter_id=info.invoicee_id,
             bill_id=bill_UUID,
             amount=info.amount,
-            amount_paid=info.paid,
+            amount_paid=0,
             desc=info.bill_name,
             due_date=info.date,
             issue_date=date.today(),
