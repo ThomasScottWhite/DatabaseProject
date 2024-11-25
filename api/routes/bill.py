@@ -18,6 +18,16 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/bill", tags=["bill"])
 
 
+def _get_chapter_id_from_bill_id(conn: Connection, bill_id: str | uuid.UUID) -> int:
+    query = select(db.tb.bill.c.chapter_id).where(db.tb.bill.c.bill_id == str(bill_id))
+    result = conn.execute(query).one_or_none()
+
+    if result is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Specified bill does not exist.")
+
+    return result[0]
+
+
 class MakeBillRequest(BaseModel):
     invoicee_name: str
     invoicee_id: int
@@ -69,6 +79,35 @@ async def make_bill(
         conn.commit()
 
     return {"message": "Bill created successfully"}
+
+
+class UpdateBillRequest(BaseModel):
+    amount: float = None
+    amount_paid: float = None
+    desc: str = None
+    due_date: datetime.datetime = None
+    issue_date: datetime.date = None
+
+
+@router.patch("/internal/{bill_id}", status_code=status.HTTP_204_NO_CONTENT)
+def update_internal_bill(
+    bill_id: uuid.UUID,
+    updates: UpdateBillRequest,
+    authorization: Annotated[str | None, Header()] = None,
+):
+    auth_checker = auth.get(authorization)
+    auth_checker.logged_in().raise_for_http()
+
+    with db.begin() as conn:
+        chapter_id = _get_chapter_id_from_bill_id(conn, bill_id)
+        auth_checker.is_chapter_admin(chapter_id).raise_for_http()
+
+        query = (
+            db.tb.bill.update()
+            .values(**updates.model_dump(exclude_unset=True))
+            .where(db.tb.bill.c.bill_id == str(bill_id))
+        )
+        conn.execute(query)
 
 
 class MakeExternalBillRequest(BaseModel):
