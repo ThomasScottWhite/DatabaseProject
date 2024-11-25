@@ -1,15 +1,14 @@
 import React, { useState } from "react";
 import { Form, Button, Container, Row, Col } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
-import { useUser } from "../context/user_context";
+import { useNavigate, useParams } from "react-router-dom";
+
 const PaymentScreen = () => {
   const { id, amount, bill_name } = useParams();
   const [cardNumber, setCardNumber] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [cvv, setCvv] = useState("");
   const navigate = useNavigate();
-  const user = useUser();
+
   const handlePayment = async (e) => {
     e.preventDefault();
 
@@ -34,10 +33,7 @@ const PaymentScreen = () => {
       }
 
       const data = await response.json();
-      console.log("Payment Response:", data);
-
       alert(`Payment successful for ${bill_name}, amount: $${amount}`);
-
       navigate("/");
     } catch (error) {
       console.error("Payment failed:", error);
@@ -61,7 +57,6 @@ const PaymentScreen = () => {
                 required
               />
             </Form.Group>
-
             <Form.Group controlId="formExpiryDate" className="mb-3">
               <Form.Label>Expiry Date</Form.Label>
               <Form.Control
@@ -72,7 +67,6 @@ const PaymentScreen = () => {
                 required
               />
             </Form.Group>
-
             <Form.Group controlId="formCvv" className="mb-3">
               <Form.Label>CVV</Form.Label>
               <Form.Control
@@ -83,7 +77,6 @@ const PaymentScreen = () => {
                 required
               />
             </Form.Group>
-
             <Button variant="primary" type="submit" className="w-100">
               Pay ${amount}
             </Button>

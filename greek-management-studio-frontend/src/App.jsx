@@ -17,7 +17,7 @@ function App() {
           <Route path="/" element={<Login />} />
           <Route path="/mainpage/*" element={<MainPage />} />
           <Route path="/create-account" element={<CreateAccount />} />
-          <Route path="/create-organization" element={<CreateOrganization />} />
+          {/* <Route path="/create-organization" element={<CreateOrganization />} /> */}
           <Route
             path="/payment/:id/:amount/:bill_name"
             element={<PaymentScreen />}

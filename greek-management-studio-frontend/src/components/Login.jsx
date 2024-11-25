@@ -12,12 +12,12 @@ const Login = () => {
 
   const login_request = async (e) => {
     e.preventDefault();
-  
+
     const payload = {
       email: email,
       password: password,
     };
-  
+
     try {
       const response = await fetch("/api/user/login", {
         method: "POST",
@@ -26,19 +26,17 @@ const Login = () => {
         },
         body: JSON.stringify(payload),
       });
-  
+
       if (response.ok) {
         const data = await response.json();
         console.log("Login response data:", data);
-  
-        // Call login and wait for the state to update
+
         user.login(
           data.chapter_id,
           data.auth_token,
           data.email,
           data.is_chapter_admin,
           () => {
-            // Navigate after the state is updated
             console.log("State updated. Navigating...");
             navigate("/mainpage");
           }
@@ -51,7 +49,7 @@ const Login = () => {
       console.error("Error during login:", error);
       alert("An error occurred while logging in. Please try again.");
     }
-  };  
+  };
 
   return (
     <Container className="d-flex justify-content-center align-items-center min-vh-100">
@@ -87,7 +85,7 @@ const Login = () => {
           </Form>
 
           <Row className="mt-4">
-            <h2 className="text-center mt-4 mb-4">Create New Accounts</h2>
+            <h2 className="text-center mt-4 mb-4">Create New Account</h2>
 
             <Col className="text-center">
               <Link to="/create-account">
@@ -96,11 +94,11 @@ const Login = () => {
                 </Button>
               </Link>
 
-              <Link to="/create-organization">
+              {/* <Link to="/create-organization">
                 <Button variant="secondary" className="w-100">
                   Create New Organization
                 </Button>
-              </Link>
+              </Link> */}
             </Col>
           </Row>
         </Col>
