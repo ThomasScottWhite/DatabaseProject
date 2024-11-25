@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import logging
-from datetime import date
 from typing import Annotated, Any, Sequence
 
 from fastapi import APIRouter, Header, HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy import Connection, Row, select
+from sqlalchemy import Connection, Row
 
 from api import auth, db, models
 
