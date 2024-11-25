@@ -35,7 +35,7 @@ class CreateCardRequest(CreatePaymentInfoRequest):
 def create_payment_info(
     specification: CreateBankAccountRequest | CreateCardRequest,
     authorization: Annotated[str | None, Header()] = None,
-):
+) -> models.BankAccount | models.Card:
     auth.get(authorization).is_user(specification.member_email).raise_for_http()
 
     with db.get_connection() as conn:
@@ -108,3 +108,6 @@ def get_member_payment_info(
         cards = conn.execute(card_query).all()
     print(banks, cards)
     return dict(bank_accounts=banks, cards=cards)
+
+
+# TODO: update, delete
