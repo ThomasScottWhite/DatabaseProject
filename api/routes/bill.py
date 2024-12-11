@@ -7,7 +7,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Header, HTTPException, status
 from pydantic import BaseModel, field_validator
-from sqlalchemy import Connection, select
+from sqlalchemy import Connection, case, select
 
 from api import auth, db, models
 
@@ -114,7 +114,7 @@ def pay_bill(
         )
         email_result = conn.execute(email_query).one_or_none()
 
-        if email_query is None:
+        if email_result is None:
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND,
                 "Specified bill does not exist or is not an internal bill.",
@@ -125,7 +125,16 @@ def pay_bill(
         update_query = (
             db.tb.bill.update()
             .returning(*db.tb.bill.c)
-            .values(amount_paid=db.tb.bill.c.amount_paid + payment.payment_amount)
+            .values(
+                amount_paid=case(
+                    (
+                        (db.tb.bill.c.amount_paid + payment.payment_amount)
+                        > db.tb.bill.c.amount,
+                        db.tb.bill.c.amount,
+                    ),
+                    else_=db.tb.bill.c.amount_paid + payment.payment_amount,
+                )
+            )
             .where(db.tb.bill.c.bill_id == str(bill_id))
         )
         result = conn.execute(update_query).one_or_none()
