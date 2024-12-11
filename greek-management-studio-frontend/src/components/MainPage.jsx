@@ -23,7 +23,10 @@ const MainPage = () => {
               defaultActiveKey="members"
               id="uncontrolled-tab-example"
               className="mb-3"
+              mountOnEnter
+              unmountOnExit
             >
+              {" "}
               <Tab eventKey="members" title="Members">
                 <Members />
               </Tab>
