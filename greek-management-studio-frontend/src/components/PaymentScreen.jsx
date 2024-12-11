@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Form, Button, Container, Row, Col } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
+import { useUser } from "../context/user_context";
 
 const PaymentScreen = () => {
+  const user = useUser();
   const { id, amount, bill_name } = useParams();
   const [cardNumber, setCardNumber] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
@@ -13,20 +15,14 @@ const PaymentScreen = () => {
     e.preventDefault();
 
     const paymentData = {
-      bill_id: id,
-      amount: amount,
-      card_number: cardNumber,
-      ccv: cvv,
+      payment_amount: amount,
     };
 
     try {
-      const response = await fetch("/api/payment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(paymentData),
-      });
+      const response = await user.post_with_headers(
+        `/api/bill/pay/${id}`,
+        paymentData
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
